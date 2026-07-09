@@ -1,6 +1,14 @@
-import Form from "../components/form"
+import Form from "../components/form";
+import { carregarPresencaSalva } from "../lib/presenca";
+import PresencaConfirmada from "./presencaconfirmada";
+import PresencaNaoConfirmada from "./presencanaoconfirmada";
 
 function Home() {
+  const presenca = carregarPresencaSalva();
+
+  if (presenca?.respostaPresenca === "sim") return <PresencaConfirmada />;
+  if (presenca?.respostaPresenca === "nao") return <PresencaNaoConfirmada />;
+
   return (
     <div className="invite-page">
       <div className="star-field star-field-top" aria-hidden="true" />
@@ -23,7 +31,7 @@ function Home() {
         <Form />
       </main>
     </div>
-  )
+  );
 }
 
-export default Home
+export default Home;
