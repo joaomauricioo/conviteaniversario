@@ -1,7 +1,4 @@
-const ENDERECO_API = (import.meta.env.VITE_API_URL ?? "http://localhost:3000").replace(
-  /\/$/,
-  "",
-);
+const ENDERECO_API = (import.meta.env.VITE_API_URL ?? "/api").replace(/\/$/, "");
 
 type ErroDaApi = {
   mensagem?: string;
