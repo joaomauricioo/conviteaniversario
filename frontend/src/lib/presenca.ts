@@ -1,4 +1,4 @@
-export const PRESENCA_STORAGE_KEY = "convite-resposta-presenca";
+export const CHAVE_PRESENCA_SALVA = "convite-resposta-presenca";
 
 export type RespostaPresenca = "sim" | "nao";
 
@@ -9,25 +9,30 @@ export type PresencaSalva = {
   mensagem?: string;
 };
 
+function textoValido(valor: unknown): valor is string {
+  return typeof valor === "string" && valor.trim().length > 0;
+}
+
 export function carregarPresencaSalva(): PresencaSalva | null {
   try {
-    const valor = localStorage.getItem(PRESENCA_STORAGE_KEY);
+    const valor = localStorage.getItem(CHAVE_PRESENCA_SALVA);
     if (!valor) return null;
 
     const dados = JSON.parse(valor) as Partial<PresencaSalva>;
-    if (
-      !dados.nome ||
-      !dados.celular ||
-      (dados.respostaPresenca !== "sim" && dados.respostaPresenca !== "nao")
-    ) {
+    const nome = dados.nome;
+    const celular = dados.celular;
+    const respostaPresenca = dados.respostaPresenca;
+    const respostaValida = respostaPresenca === "sim" || respostaPresenca === "nao";
+
+    if (!textoValido(nome) || !textoValido(celular) || !respostaValida) {
       return null;
     }
 
     return {
-      nome: dados.nome,
-      celular: dados.celular,
-      respostaPresenca: dados.respostaPresenca,
-      mensagem: dados.mensagem,
+      nome: nome.trim(),
+      celular: limparDigitosCelular(celular),
+      respostaPresenca,
+      mensagem: typeof dados.mensagem === "string" ? dados.mensagem : undefined,
     };
   } catch {
     return null;
@@ -36,9 +41,9 @@ export function carregarPresencaSalva(): PresencaSalva | null {
 
 export function salvarPresenca(dados: PresencaSalva) {
   try {
-    localStorage.setItem(PRESENCA_STORAGE_KEY, JSON.stringify(dados));
+    localStorage.setItem(CHAVE_PRESENCA_SALVA, JSON.stringify(dados));
   } catch {
-    // A resposta continua valendo na sessao atual mesmo se o armazenamento falhar.
+    return;
   }
 }
 

@@ -1,13 +1,13 @@
-import Form from "../components/form";
+import Formulario from "../components/form";
 import { carregarPresencaSalva } from "../lib/presenca";
 import PresencaConfirmada from "./presencaconfirmada";
 import PresencaNaoConfirmada from "./presencanaoconfirmada";
 
-function Home() {
-  const presenca = carregarPresencaSalva();
+function Inicio() {
+  const presencaSalva = carregarPresencaSalva();
 
-  if (presenca?.respostaPresenca === "sim") return <PresencaConfirmada />;
-  if (presenca?.respostaPresenca === "nao") return <PresencaNaoConfirmada />;
+  if (presencaSalva?.respostaPresenca === "sim") return <PresencaConfirmada />;
+  if (presencaSalva?.respostaPresenca === "nao") return <PresencaNaoConfirmada />;
 
   return (
     <div className="invite-page">
@@ -16,22 +16,22 @@ function Home() {
 
       <main className="invite-shell">
         <section className="invite-hero">
-          <h1>Convite de Aniversario</h1>
+          <h1>Convite de Aniversário</h1>
           <img
             className="invite-crest"
             src="/brasao-isabela-prata.png"
-            alt="Brasao com a inicial de Isabela"
+            alt="Brasão com a inicial de Isabela"
           />
           <p className="invite-message">
-            Para viver as emocoes deste dia tao importante, quero estar ao lado
-            de pessoas especiais como voce.
+            Para viver as emoções deste dia tão importante, quero estar ao lado
+            de pessoas especiais como você.
           </p>
         </section>
 
-        <Form />
+        <Formulario />
       </main>
     </div>
   );
 }
 
-export default Home;
+export default Inicio;

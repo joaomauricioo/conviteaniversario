@@ -1,89 +1,174 @@
+import { timingSafeEqual } from "crypto";
 import cors from "cors";
-import express, { type ErrorRequestHandler } from "express";
+import express, { type ErrorRequestHandler, type RequestHandler } from "express";
 import { z } from "zod";
 import { prisma } from "./lib/prisma";
 
+function limparTexto(texto: string) {
+  return texto
+    .normalize("NFC")
+    .replace(/[\u0000-\u001F\u007F]/g, "")
+    .replace(/[<>]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 const celularSchema = z
-  .string({ error: "O celular e obrigatorio." })
+  .string({ error: "O celular é obrigatório." })
   .trim()
   .transform((celular) => celular.replace(/\D/g, ""))
   .refine(
     (celular) => celular.length === 10 || celular.length === 11,
-    "Informe um celular valido com DDD.",
+    "Informe um celular válido com DDD.",
   );
 
+const nomeSchema = z
+  .string({ error: "O nome é obrigatório." })
+  .transform(limparTexto)
+  .pipe(
+    z
+      .string()
+      .min(1, "O nome não pode estar vazio.")
+      .max(100, "O nome deve ter no máximo 100 caracteres."),
+  );
+
+const nomePresenteSchema = z
+  .string({ error: "O nome do presente é obrigatório." })
+  .transform(limparTexto)
+  .pipe(
+    z
+      .string()
+      .min(1, "O nome do presente não pode estar vazio.")
+      .max(120, "O nome do presente deve ter no máximo 120 caracteres."),
+  );
+
+const fotoUrlSchema = z
+  .preprocess(
+    (valor) => {
+      if (typeof valor !== "string") return valor;
+      const texto = valor.trim();
+      return texto ? texto : null;
+    },
+    z
+      .string()
+      .max(500, "A URL da foto deve ter no máximo 500 caracteres.")
+      .url("Informe uma URL válida para a foto.")
+      .refine((url) => ["http:", "https:"].includes(new URL(url).protocol), {
+        message: "A URL da foto deve começar com http:// ou https://.",
+      })
+      .nullable()
+      .optional(),
+  )
+  .transform((fotoUrl) => fotoUrl ?? null);
+
 const confirmacaoSchema = z.object({
-  nome: z
-    .string({ error: "O nome e obrigatorio." })
-    .trim()
-    .min(1, "O nome nao pode estar vazio."),
+  nome: nomeSchema,
   celular: celularSchema,
   presenca: z.boolean({
-    error: "A presenca deve ser informada como sim ou nao.",
+    error: "A presença deve ser informada como sim ou não.",
   }),
 });
 
 const presenteSchema = z.object({
-  nome: z
-    .string({ error: "O nome do presente e obrigatorio." })
-    .trim()
-    .min(1, "O nome do presente nao pode estar vazio."),
-  fotoUrl: z
-    .string()
-    .trim()
-    .optional()
-    .nullable()
-    .transform((fotoUrl) => fotoUrl || null),
+  nome: nomePresenteSchema,
+  fotoUrl: fotoUrlSchema,
 });
 
 const editarPresenteSchema = presenteSchema
   .partial()
-  .refine((data) => data.nome !== undefined || data.fotoUrl !== undefined, {
+  .refine((dados) => dados.nome !== undefined || dados.fotoUrl !== undefined, {
     message: "Informe ao menos um campo para atualizar.",
   });
 
-const presenteIdSchema = z.string().uuid("O identificador do presente e invalido.");
+const presenteIdSchema = z.string().uuid("O identificador do presente é inválido.");
 
-function corsOrigins() {
-  const configuredOrigins = process.env.FRONTEND_URL?.split(",")
-    .map((origin) => origin.trim())
+function buscarOrigensPermitidas() {
+  const origensConfiguradas = process.env.FRONTEND_URL?.split(",")
+    .map((origem) => origem.trim())
     .filter(Boolean);
 
-  return configuredOrigins?.length ? configuredOrigins : true;
+  if (origensConfiguradas?.length) return origensConfiguradas;
+  return process.env.NODE_ENV === "production" ? [] : true;
+}
+
+const adicionarCabecalhosSeguros: RequestHandler = (_pedido, resposta, proximo) => {
+  resposta.setHeader("X-Content-Type-Options", "nosniff");
+  resposta.setHeader("X-Frame-Options", "DENY");
+  resposta.setHeader("Referrer-Policy", "no-referrer");
+  resposta.setHeader("Cache-Control", "no-store");
+  proximo();
+};
+
+function tokenIgual(tokenRecebido: string, tokenEsperado: string) {
+  const recebido = Buffer.from(tokenRecebido);
+  const esperado = Buffer.from(tokenEsperado);
+
+  return recebido.length === esperado.length && timingSafeEqual(recebido, esperado);
+}
+
+const conferirAdministrador: RequestHandler = (pedido, resposta, proximo) => {
+  const tokenEsperado = process.env.ADMIN_TOKEN;
+  const tokenRecebido = pedido.header("x-admin-token") ?? "";
+
+  if (!tokenEsperado) {
+    resposta.status(503).json({
+      mensagem: "Token de administrador não configurado no servidor.",
+    });
+    return;
+  }
+
+  if (!tokenIgual(tokenRecebido, tokenEsperado)) {
+    resposta.status(401).json({ mensagem: "Acesso administrativo não autorizado." });
+    return;
+  }
+
+  proximo();
+};
+
+function erroDeValidacao(resultado: z.ZodError) {
+  return {
+    mensagem: resultado.issues[0]?.message ?? "Dados inválidos.",
+    erros: resultado.flatten().fieldErrors,
+  };
 }
 
 export const app = express();
 
-app.use(cors({ origin: corsOrigins() }));
-app.use(express.json());
+app.use(adicionarCabecalhosSeguros);
+app.use(
+  cors({
+    origin: buscarOrigensPermitidas(),
+    allowedHeaders: ["Content-Type", "x-admin-token"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  }),
+);
+app.use(express.json({ limit: "20kb" }));
 
-app.get("/", (_request, response) => {
-  response.json({ mensagem: "API do convite de aniversario esta funcionando." });
+app.get("/", (_pedido, resposta) => {
+  resposta.json({ mensagem: "API do convite de aniversário está funcionando." });
 });
 
-app.post("/confirmar-presenca", async (request, response, next) => {
+app.post("/confirmar-presenca", async (pedido, resposta, proximo) => {
   try {
-    const validation = confirmacaoSchema.safeParse(request.body);
+    const resultado = confirmacaoSchema.safeParse(pedido.body);
 
-    if (!validation.success) {
-      response.status(400).json({
-        mensagem: validation.error.issues[0]?.message ?? "Dados invalidos.",
-        erros: validation.error.flatten().fieldErrors,
-      });
+    if (!resultado.success) {
+      resposta.status(400).json(erroDeValidacao(resultado.error));
       return;
     }
 
+    const dados = resultado.data;
     const convidadoExistente = await prisma.convidado.findUnique({
-      where: { celular: validation.data.celular },
+      where: { celular: dados.celular },
       select: { id: true },
     });
 
     const convidado = await prisma.convidado.upsert({
-      where: { celular: validation.data.celular },
-      create: validation.data,
+      where: { celular: dados.celular },
+      create: dados,
       update: {
-        nome: validation.data.nome,
-        presenca: validation.data.presenca,
+        nome: dados.nome,
+        presenca: dados.presenca,
       },
       select: {
         id: true,
@@ -95,129 +180,127 @@ app.post("/confirmar-presenca", async (request, response, next) => {
       },
     });
 
-    const atualizado = Boolean(convidadoExistente);
+    const foiAtualizado = Boolean(convidadoExistente);
 
-    response.status(atualizado ? 200 : 201).json({
-      mensagem: atualizado
-        ? "Sua confirma\u00e7\u00e3o de presen\u00e7a foi atualizada com sucesso."
-        : validation.data.presenca
-          ? "Presenca confirmada com sucesso!"
+    resposta.status(foiAtualizado ? 200 : 201).json({
+      mensagem: foiAtualizado
+        ? "Sua confirmação de presença foi atualizada com sucesso."
+        : dados.presenca
+          ? "Presença confirmada com sucesso!"
           : "Resposta registrada com sucesso.",
-      atualizado,
+      atualizado: foiAtualizado,
       convidado,
     });
-  } catch (error) {
-    next(error);
+  } catch (erro) {
+    proximo(erro);
   }
 });
 
-app.post("/presentes", async (request, response, next) => {
-  try {
-    const validation = presenteSchema.safeParse(request.body);
-
-    if (!validation.success) {
-      response.status(400).json({
-        mensagem: validation.error.issues[0]?.message ?? "Dados invalidos.",
-        erros: validation.error.flatten().fieldErrors,
-      });
-      return;
-    }
-
-    const presente = await prisma.presente.create({
-      data: validation.data,
-    });
-
-    response.status(201).json({
-      mensagem: "Presente cadastrado com sucesso!",
-      presente,
-    });
-  } catch (error) {
-    next(error);
-  }
-});
-
-app.get("/presentes", async (_request, response, next) => {
+app.get("/presentes", async (_pedido, resposta, proximo) => {
   try {
     const presentes = await prisma.presente.findMany({
       orderBy: { createdAt: "desc" },
     });
 
-    response.json({ presentes });
-  } catch (error) {
-    next(error);
+    resposta.json({ presentes });
+  } catch (erro) {
+    proximo(erro);
   }
 });
 
-app.put("/presentes/:id", async (request, response, next) => {
+app.post("/presentes", conferirAdministrador, async (pedido, resposta, proximo) => {
   try {
-    const idValidation = presenteIdSchema.safeParse(request.params.id);
-    const validation = editarPresenteSchema.safeParse(request.body);
+    const resultado = presenteSchema.safeParse(pedido.body);
 
-    if (!idValidation.success) {
-      response.status(400).json({ mensagem: idValidation.error.issues[0]?.message });
+    if (!resultado.success) {
+      resposta.status(400).json(erroDeValidacao(resultado.error));
       return;
     }
 
-    if (!validation.success) {
-      response.status(400).json({
-        mensagem: validation.error.issues[0]?.message ?? "Dados invalidos.",
-        erros: validation.error.flatten().fieldErrors,
-      });
+    const presente = await prisma.presente.create({
+      data: resultado.data,
+    });
+
+    resposta.status(201).json({
+      mensagem: "Presente cadastrado com sucesso!",
+      presente,
+    });
+  } catch (erro) {
+    proximo(erro);
+  }
+});
+
+app.put("/presentes/:id", conferirAdministrador, async (pedido, resposta, proximo) => {
+  try {
+    const resultadoId = presenteIdSchema.safeParse(pedido.params.id);
+    const resultado = editarPresenteSchema.safeParse(pedido.body);
+
+    if (!resultadoId.success) {
+      resposta.status(400).json({ mensagem: resultadoId.error.issues[0]?.message });
+      return;
+    }
+
+    if (!resultado.success) {
+      resposta.status(400).json(erroDeValidacao(resultado.error));
       return;
     }
 
     const presenteExistente = await prisma.presente.findUnique({
-      where: { id: idValidation.data },
+      where: { id: resultadoId.data },
       select: { id: true },
     });
 
     if (!presenteExistente) {
-      response.status(404).json({ mensagem: "Presente nao encontrado." });
+      resposta.status(404).json({ mensagem: "Presente não encontrado." });
       return;
     }
 
     const presente = await prisma.presente.update({
-      where: { id: idValidation.data },
-      data: validation.data,
+      where: { id: resultadoId.data },
+      data: resultado.data,
     });
 
-    response.json({
+    resposta.json({
       mensagem: "Presente atualizado com sucesso!",
       presente,
     });
-  } catch (error) {
-    next(error);
+  } catch (erro) {
+    proximo(erro);
   }
 });
 
-app.delete("/presentes/:id", async (request, response, next) => {
-  try {
-    const idValidation = presenteIdSchema.safeParse(request.params.id);
+app.delete(
+  "/presentes/:id",
+  conferirAdministrador,
+  async (pedido, resposta, proximo) => {
+    try {
+      const resultadoId = presenteIdSchema.safeParse(pedido.params.id);
 
-    if (!idValidation.success) {
-      response.status(400).json({ mensagem: idValidation.error.issues[0]?.message });
-      return;
+      if (!resultadoId.success) {
+        resposta.status(400).json({ mensagem: resultadoId.error.issues[0]?.message });
+        return;
+      }
+
+      const presenteExistente = await prisma.presente.findUnique({
+        where: { id: resultadoId.data },
+        select: { id: true },
+      });
+
+      if (!presenteExistente) {
+        resposta.status(404).json({ mensagem: "Presente não encontrado." });
+        return;
+      }
+
+      await prisma.presente.delete({ where: { id: resultadoId.data } });
+
+      resposta.json({ mensagem: "Presente excluído com sucesso!" });
+    } catch (erro) {
+      proximo(erro);
     }
+  },
+);
 
-    const presenteExistente = await prisma.presente.findUnique({
-      where: { id: idValidation.data },
-      select: { id: true },
-    });
-
-    if (!presenteExistente) {
-      response.status(404).json({ mensagem: "Presente nao encontrado." });
-      return;
-    }
-
-    await prisma.presente.delete({ where: { id: idValidation.data } });
-
-    response.json({ mensagem: "Presente excluido com sucesso!" });
-  } catch (error) {
-    next(error);
-  }
-});
-
-app.get("/relatorio", async (_request, response, next) => {
+app.get("/relatorio", conferirAdministrador, async (_pedido, resposta, proximo) => {
   try {
     const [totalGeral, totalConfirmados, convidados] = await prisma.$transaction([
       prisma.convidado.count(),
@@ -234,26 +317,26 @@ app.get("/relatorio", async (_request, response, next) => {
       }),
     ]);
 
-    response.json({
+    resposta.json({
       totalGeral,
       totalConfirmados,
       totalNaoConfirmados: totalGeral - totalConfirmados,
       convidados,
     });
-  } catch (error) {
-    next(error);
+  } catch (erro) {
+    proximo(erro);
   }
 });
 
-app.use((_request, response) => {
-  response.status(404).json({ mensagem: "Rota nao encontrada." });
+app.use((_pedido, resposta) => {
+  resposta.status(404).json({ mensagem: "Rota não encontrada." });
 });
 
-const errorHandler: ErrorRequestHandler = (error, _request, response, _next) => {
-  console.error(error);
-  response.status(500).json({
-    mensagem: "Nao foi possivel concluir a operacao. Tente novamente.",
+const tratarErro: ErrorRequestHandler = (erro, _pedido, resposta, _proximo) => {
+  console.error("Erro interno:", erro instanceof Error ? erro.message : "erro desconhecido");
+  resposta.status(500).json({
+    mensagem: "Não foi possível concluir a operação. Tente novamente.",
   });
 };
 
-app.use(errorHandler);
+app.use(tratarErro);

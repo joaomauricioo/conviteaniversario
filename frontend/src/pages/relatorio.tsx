@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { apiRequest } from "../lib/api";
+import { pedirApiAdministrativa } from "../lib/administrador";
 import { formatarCelular } from "../lib/presenca";
 
 type Convidado = {
@@ -17,7 +17,7 @@ type DadosRelatorio = {
   convidados: Convidado[];
 };
 
-const arquivoRelatorio = "relatorio-presenca";
+const nomeArquivoRelatorio = "relatorio-presenca";
 
 function formatarData(data: string) {
   return new Intl.DateTimeFormat("pt-BR", {
@@ -26,56 +26,92 @@ function formatarData(data: string) {
   }).format(new Date(data));
 }
 
-function linhasRelatorio(convidados: Convidado[]) {
+function montarLinhasRelatorio(convidados: Convidado[]) {
   return convidados.map((convidado) => ({
     Nome: convidado.nome,
     Celular: formatarCelular(convidado.celular),
-    Presenca: convidado.presenca ? "Sim" : "Nao",
-    "Data de confirmacao": formatarData(convidado.updatedAt),
+    Presença: convidado.presenca ? "Sim" : "Não",
+    "Data de confirmação": formatarData(convidado.updatedAt),
   }));
+}
+
+function limparTextoParaArquivo(texto: string) {
+  return texto
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function baixarArquivo(conteudo: string, nomeArquivo: string, tipo: string) {
+  const arquivo = new Blob([conteudo], { type: tipo });
+  const url = URL.createObjectURL(arquivo);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = nomeArquivo;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
 }
 
 function Relatorio() {
   const [dados, setDados] = useState<DadosRelatorio | null>(null);
   const [erro, setErro] = useState("");
-  const [feedbackExportacao, setFeedbackExportacao] = useState("");
+  const [mensagemExportacao, setMensagemExportacao] = useState("");
 
   useEffect(() => {
-    apiRequest<DadosRelatorio>("/relatorio")
+    pedirApiAdministrativa<DadosRelatorio>("/relatorio")
       .then(setDados)
-      .catch((error: unknown) => {
+      .catch((erroAtual: unknown) => {
         setErro(
-          error instanceof Error
-            ? error.message
-            : "Nao foi possivel carregar o relatorio.",
+          erroAtual instanceof Error
+            ? erroAtual.message
+            : "Não foi possível carregar o relatório.",
         );
       });
   }, []);
 
-  function validarDadosParaExportar() {
+  function dadosPodemSerExportados() {
     if (!dados || dados.convidados.length === 0) {
-      setFeedbackExportacao("Nao ha dados para exportar.");
+      setMensagemExportacao("Não há dados para exportar.");
       return false;
     }
 
-    setFeedbackExportacao("");
+    setMensagemExportacao("");
     return true;
   }
 
   async function exportarExcel() {
-    if (!validarDadosParaExportar() || !dados) return;
+    if (!dadosPodemSerExportados() || !dados) return;
 
-    const XLSX = await import("xlsx");
-    const planilha = XLSX.utils.json_to_sheet(linhasRelatorio(dados.convidados));
-    planilha["!cols"] = [{ wch: 28 }, { wch: 18 }, { wch: 12 }, { wch: 22 }];
+    const linhas = montarLinhasRelatorio(dados.convidados);
+    const cabecalho = ["Nome", "Celular", "Presença", "Data de confirmação"];
+    const conteudoCabecalho = cabecalho
+      .map((titulo) => `<th>${limparTextoParaArquivo(titulo)}</th>`)
+      .join("");
+    const conteudoLinhas = linhas
+      .map(
+        (linha) =>
+          `<tr><td>${limparTextoParaArquivo(linha.Nome)}</td><td>${limparTextoParaArquivo(
+            linha.Celular,
+          )}</td><td>${limparTextoParaArquivo(
+            linha["Presença"],
+          )}</td><td>${limparTextoParaArquivo(linha["Data de confirmação"])}</td></tr>`,
+      )
+      .join("");
+    const tabela = `<table><thead><tr>${conteudoCabecalho}</tr></thead><tbody>${conteudoLinhas}</tbody></table>`;
 
-    const pasta = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(pasta, planilha, "Presencas");
-    XLSX.writeFile(pasta, `${arquivoRelatorio}.xlsx`);
+    baixarArquivo(
+      tabela,
+      `${nomeArquivoRelatorio}.xls`,
+      "application/vnd.ms-excel;charset=utf-8",
+    );
   }
 
   async function exportarPdf() {
-    if (!validarDadosParaExportar() || !dados) return;
+    if (!dadosPodemSerExportados() || !dados) return;
 
     const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
       import("jspdf"),
@@ -89,23 +125,23 @@ function Relatorio() {
 
     documento.setFont("helvetica", "bold");
     documento.setFontSize(18);
-    documento.text("Relatorio de Presenca", 14, 18);
+    documento.text("Relatório de Presença", 14, 18);
 
     documento.setFont("helvetica", "normal");
     documento.setFontSize(10);
     documento.text(`Gerado em: ${dataGeracao}`, 14, 26);
     documento.text(`Total geral: ${dados.totalGeral}`, 14, 34);
     documento.text(`Confirmados: ${dados.totalConfirmados}`, 64, 34);
-    documento.text(`Nao confirmados: ${dados.totalNaoConfirmados}`, 118, 34);
+    documento.text(`Não confirmados: ${dados.totalNaoConfirmados}`, 118, 34);
 
     autoTable(documento, {
       startY: 42,
-      head: [["Nome", "Celular", "Presenca", "Data de confirmacao"]],
-      body: linhasRelatorio(dados.convidados).map((linha) => [
+      head: [["Nome", "Celular", "Presença", "Data de confirmação"]],
+      body: montarLinhasRelatorio(dados.convidados).map((linha) => [
         linha.Nome,
         linha.Celular,
-        linha.Presenca,
-        linha["Data de confirmacao"],
+        linha["Presença"],
+        linha["Data de confirmação"],
       ]),
       styles: {
         font: "helvetica",
@@ -121,21 +157,21 @@ function Relatorio() {
       },
     });
 
-    documento.save(`${arquivoRelatorio}.pdf`);
+    documento.save(`${nomeArquivoRelatorio}.pdf`);
   }
 
   return (
     <main className="report-page">
       <div className="report-shell">
         <header className="report-header">
-          <p className="report-kicker">Convite de aniversario</p>
-          <h1>Relatorio de presenca</h1>
+          <p className="report-kicker">Convite de aniversário</p>
+          <h1>Relatório de presença</h1>
           <p>Acompanhe as respostas recebidas pelo convite.</p>
         </header>
 
         {erro && <div className="report-message report-error">{erro}</div>}
         {!dados && !erro && (
-          <div className="report-message">Carregando confirmacoes...</div>
+          <div className="report-message">Carregando confirmações...</div>
         )}
 
         {dados && (
@@ -150,12 +186,12 @@ function Relatorio() {
                 <strong>{dados.totalConfirmados}</strong>
               </article>
               <article>
-                <span>Nao confirmados</span>
+                <span>Não confirmados</span>
                 <strong>{dados.totalNaoConfirmados}</strong>
               </article>
             </section>
 
-            <section className="report-actions" aria-label="Exportar relatorio">
+            <section className="report-actions" aria-label="Exportar relatório">
               <div>
                 <h2>Exportar dados</h2>
                 <p>Baixe os mesmos registros exibidos na tabela.</p>
@@ -168,9 +204,9 @@ function Relatorio() {
                   Exportar PDF
                 </button>
               </div>
-              {feedbackExportacao && (
+              {mensagemExportacao && (
                 <p className="report-export-feedback" role="status">
-                  {feedbackExportacao}
+                  {mensagemExportacao}
                 </p>
               )}
             </section>
@@ -182,7 +218,7 @@ function Relatorio() {
               </div>
 
               {dados.convidados.length === 0 ? (
-                <p className="report-empty">Nenhuma confirmacao recebida ainda.</p>
+                <p className="report-empty">Nenhuma confirmação recebida ainda.</p>
               ) : (
                 <div className="report-table-wrap">
                   <table>
@@ -190,7 +226,7 @@ function Relatorio() {
                       <tr>
                         <th>Nome</th>
                         <th>Celular</th>
-                        <th>Presenca</th>
+                        <th>Presença</th>
                         <th>Data</th>
                       </tr>
                     </thead>
@@ -205,12 +241,10 @@ function Relatorio() {
                                 convidado.presenca ? "is-confirmed" : "is-declined"
                               }`}
                             >
-                              {convidado.presenca ? "Sim" : "Nao"}
+                              {convidado.presenca ? "Sim" : "Não"}
                             </span>
                           </td>
-                          <td>
-                            {formatarData(convidado.updatedAt)}
-                          </td>
+                          <td>{formatarData(convidado.updatedAt)}</td>
                         </tr>
                       ))}
                     </tbody>

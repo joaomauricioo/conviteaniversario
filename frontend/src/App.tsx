@@ -1,22 +1,22 @@
-import Home from "./pages/home";
-import Relatorio from "./pages/relatorio";
+import "./App.css";
 import CadastroPresente from "./pages/cadastropresente";
+import Inicio from "./pages/home";
 import Presentes from "./pages/presentes";
 import PresencaConfirmada from "./pages/presencaconfirmada";
 import PresencaNaoConfirmada from "./pages/presencanaoconfirmada";
-import "./App.css";
+import Relatorio from "./pages/relatorio";
 
 function App() {
-  const path = window.location.pathname.replace(/\/+$/, "") || "/";
+  const caminho = window.location.pathname.replace(/\/+$/, "") || "/";
 
-  if (path === "/relatorio") return <Relatorio />;
-  if (path === "/cadastropresente") return <CadastroPresente />;
-  if (path === "/presentes") return <Presentes />;
-  if (path === "/prensencaconfirmada") return <PresencaConfirmada />;
-  if (path === "/presencaconfirmada") return <PresencaConfirmada />;
-  if (path === "/presencanaoconfirmada") return <PresencaNaoConfirmada />;
+  if (caminho === "/relatorio") return <Relatorio />;
+  if (caminho === "/cadastropresente") return <CadastroPresente />;
+  if (caminho === "/presentes") return <Presentes />;
+  if (caminho === "/prensencaconfirmada") return <PresencaConfirmada />;
+  if (caminho === "/presencaconfirmada") return <PresencaConfirmada />;
+  if (caminho === "/presencanaoconfirmada") return <PresencaNaoConfirmada />;
 
-  return <Home />;
+  return <Inicio />;
 }
 
-export default App
+export default App;

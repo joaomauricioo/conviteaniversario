@@ -1,10 +1,10 @@
-import { ConfirmationActions, DressCodeCard } from "../components/form";
+import { AcoesConfirmacao, CartaoCodigoVestimenta } from "../components/form";
 import { carregarPresencaSalva } from "../lib/presenca";
 
 function PresencaConfirmada() {
-  const presenca = carregarPresencaSalva();
+  const presencaSalva = carregarPresencaSalva();
 
-  if (!presenca || presenca.respostaPresenca !== "sim") {
+  if (!presencaSalva || presencaSalva.respostaPresenca !== "sim") {
     window.location.replace("/");
     return null;
   }
@@ -14,25 +14,24 @@ function PresencaConfirmada() {
       <main className="invite-shell is-confirmed-layout">
         <section className="success-card" role="status">
           <span className="success-icon" aria-hidden="true" />
-          <h2>Obrigado, {presenca.nome}!</h2>
+          <h2>Obrigado, {presencaSalva.nome}!</h2>
           <p>
-            {presenca.mensagem ??
-              "Sua confirma\u00e7\u00e3o foi registrada com brilho especial."}
+            {presencaSalva.mensagem ??
+              "Sua confirmação foi registrada com brilho especial."}
           </p>
         </section>
 
         <section className="invite-hero confirmed-hero">
-          <h1>Convite de Aniversario</h1>
           <img
             className="invite-crest"
             src="/brasao-isabela-prata.png"
-            alt="Brasao com a inicial de Isabela"
+            alt="Brasão com a inicial de Isabela"
           />
         </section>
 
-        <section className="confirmed-bottom-row" aria-label="Informacoes do evento">
-          <DressCodeCard className="dress-code-card-hero" />
-          <ConfirmationActions className="confirmation-actions-cards" />
+        <section className="confirmed-bottom-row" aria-label="Informações do evento">
+          <CartaoCodigoVestimenta className="dress-code-card-hero" />
+          <AcoesConfirmacao className="confirmation-actions-cards" />
         </section>
       </main>
     </div>

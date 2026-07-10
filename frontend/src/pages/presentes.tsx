@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { apiRequest } from "../lib/api";
+import { pedirApi } from "../lib/api";
 
 type Presente = {
   id: string;
@@ -7,9 +7,20 @@ type Presente = {
   fotoUrl: string | null;
 };
 
-type PresentesResponse = {
+type RespostaPresentes = {
   presentes: Presente[];
 };
+
+function urlImagemSegura(fotoUrl: string | null) {
+  if (!fotoUrl) return false;
+
+  try {
+    const url = new URL(fotoUrl);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
 
 function Presentes() {
   const [presentes, setPresentes] = useState<Presente[]>([]);
@@ -18,13 +29,13 @@ function Presentes() {
   const [imagensComErro, setImagensComErro] = useState<string[]>([]);
 
   useEffect(() => {
-    apiRequest<PresentesResponse>("/presentes")
-      .then((data) => setPresentes(data.presentes))
-      .catch((error: unknown) => {
+    pedirApi<RespostaPresentes>("/presentes")
+      .then((resposta) => setPresentes(resposta.presentes))
+      .catch((erroAtual: unknown) => {
         setErro(
-          error instanceof Error
-            ? error.message
-            : "Nao foi possivel carregar as sugestoes de presentes.",
+          erroAtual instanceof Error
+            ? erroAtual.message
+            : "Não foi possível carregar as sugestões de presentes.",
         );
       })
       .finally(() => setCarregando(false));
@@ -35,16 +46,16 @@ function Presentes() {
       <div className="presents-stars" aria-hidden="true" />
       <div className="presents-shell">
         <header className="presents-header">
-          <p>Sugest&otilde;es especiais</p>
+          <p>Sugestões especiais</p>
           <h1>Lista de presentes</h1>
           <span>
-            Sua presen&ccedil;a j&aacute; &eacute; um presente. Caso queira nos
+            Sua presença já é um presente. Caso queira nos
             mimar, reunimos algumas ideias por aqui.
           </span>
         </header>
 
         {carregando && (
-          <div className="presents-feedback">Carregando sugest&otilde;es...</div>
+          <div className="presents-feedback">Carregando sugestões...</div>
         )}
         {erro && (
           <div className="presents-feedback is-error" role="alert">
@@ -53,28 +64,27 @@ function Presentes() {
         )}
         {!carregando && !erro && presentes.length === 0 && (
           <div className="presents-feedback">
-            Nenhuma sugest&atilde;o foi cadastrada ainda.
+            Nenhuma sugestão foi cadastrada ainda.
           </div>
         )}
 
         {!carregando && !erro && presentes.length > 0 && (
-          <section className="presents-grid" aria-label="Sugestoes de presentes">
+          <section className="presents-grid" aria-label="Sugestões de presentes">
             {presentes.map((presente) => {
-              const fotoUrl =
-                presente.fotoUrl && !imagensComErro.includes(presente.id)
-                  ? presente.fotoUrl
-                  : null;
+              const mostrarFoto =
+                urlImagemSegura(presente.fotoUrl) &&
+                !imagensComErro.includes(presente.id);
 
               return (
                 <article
                   className={`present-card ${
-                    fotoUrl ? "" : "present-card-text-only"
+                    mostrarFoto ? "" : "present-card-text-only"
                   }`.trim()}
                   key={presente.id}
                 >
-                  {fotoUrl && (
+                  {mostrarFoto && (
                     <img
-                      src={fotoUrl}
+                      src={presente.fotoUrl ?? ""}
                       alt={presente.nome}
                       onError={() =>
                         setImagensComErro((ids) => [...ids, presente.id])

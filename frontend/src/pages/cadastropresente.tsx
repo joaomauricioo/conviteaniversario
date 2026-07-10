@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { apiRequest } from "../lib/api";
+import { pedirApi } from "../lib/api";
+import { pedirApiAdministrativa } from "../lib/administrador";
 
 type Presente = {
   id: string;
@@ -8,30 +9,39 @@ type Presente = {
   createdAt: string;
 };
 
-type PresentesResponse = {
+type RespostaPresentes = {
   presentes: Presente[];
+};
+
+type RespostaMensagem = {
+  mensagem: string;
 };
 
 function CadastroPresente() {
   const [presentes, setPresentes] = useState<Presente[]>([]);
   const [nome, setNome] = useState("");
   const [fotoUrl, setFotoUrl] = useState("");
-  const [editandoId, setEditandoId] = useState<string | null>(null);
+  const [idEmEdicao, setIdEmEdicao] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
   const [sucesso, setSucesso] = useState("");
 
-  async function carregarPresentes() {
+  async function buscarPresentes() {
+    const resposta = await pedirApi<RespostaPresentes>("/presentes");
+    return resposta.presentes;
+  }
+
+  async function atualizarListaPresentes() {
     try {
-      const data = await apiRequest<PresentesResponse>("/presentes");
-      setPresentes(data.presentes);
+      const lista = await buscarPresentes();
+      setPresentes(lista);
       setErro("");
-    } catch (error) {
+    } catch (erroAtual) {
       setErro(
-        error instanceof Error
-          ? error.message
-          : "Nao foi possivel carregar os presentes.",
+        erroAtual instanceof Error
+          ? erroAtual.message
+          : "Não foi possível carregar os presentes.",
       );
     } finally {
       setCarregando(false);
@@ -39,21 +49,33 @@ function CadastroPresente() {
   }
 
   useEffect(() => {
-    void carregarPresentes();
+    buscarPresentes()
+      .then(setPresentes)
+      .catch((erroAtual: unknown) => {
+        setErro(
+          erroAtual instanceof Error
+            ? erroAtual.message
+            : "Não foi possível carregar os presentes.",
+        );
+      })
+      .finally(() => setCarregando(false));
   }, []);
 
   function limparFormulario() {
     setNome("");
     setFotoUrl("");
-    setEditandoId(null);
+    setIdEmEdicao(null);
   }
 
-  async function salvarPresente(event: React.FormEvent) {
-    event.preventDefault();
+  async function salvarPresente(evento: React.FormEvent) {
+    evento.preventDefault();
     setErro("");
     setSucesso("");
 
-    if (!nome.trim()) {
+    const nomeLimpo = nome.trim();
+    const fotoUrlLimpa = fotoUrl.trim();
+
+    if (!nomeLimpo) {
       setErro("Informe o nome do presente.");
       return;
     }
@@ -61,24 +83,24 @@ function CadastroPresente() {
     setSalvando(true);
 
     try {
-      const path = editandoId ? `/presentes/${editandoId}` : "/presentes";
-      const response = await apiRequest<{ mensagem: string }>(path, {
-        method: editandoId ? "PUT" : "POST",
+      const caminho = idEmEdicao ? `/presentes/${idEmEdicao}` : "/presentes";
+      const resposta = await pedirApiAdministrativa<RespostaMensagem>(caminho, {
+        method: idEmEdicao ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          nome: nome.trim(),
-          fotoUrl: fotoUrl.trim() || null,
+          nome: nomeLimpo,
+          fotoUrl: fotoUrlLimpa || null,
         }),
       });
 
-      setSucesso(response.mensagem);
+      setSucesso(resposta.mensagem);
       limparFormulario();
-      await carregarPresentes();
-    } catch (error) {
+      await atualizarListaPresentes();
+    } catch (erroAtual) {
       setErro(
-        error instanceof Error
-          ? error.message
-          : "Nao foi possivel salvar o presente.",
+        erroAtual instanceof Error
+          ? erroAtual.message
+          : "Não foi possível salvar o presente.",
       );
     } finally {
       setSalvando(false);
@@ -86,7 +108,7 @@ function CadastroPresente() {
   }
 
   function iniciarEdicao(presente: Presente) {
-    setEditandoId(presente.id);
+    setIdEmEdicao(presente.id);
     setNome(presente.nome);
     setFotoUrl(presente.fotoUrl ?? "");
     setErro("");
@@ -101,18 +123,19 @@ function CadastroPresente() {
     setSucesso("");
 
     try {
-      const response = await apiRequest<{ mensagem: string }>(
+      const resposta = await pedirApiAdministrativa<RespostaMensagem>(
         `/presentes/${presente.id}`,
         { method: "DELETE" },
       );
-      setSucesso(response.mensagem);
-      if (editandoId === presente.id) limparFormulario();
-      await carregarPresentes();
-    } catch (error) {
+
+      setSucesso(resposta.mensagem);
+      if (idEmEdicao === presente.id) limparFormulario();
+      await atualizarListaPresentes();
+    } catch (erroAtual) {
       setErro(
-        error instanceof Error
-          ? error.message
-          : "Nao foi possivel excluir o presente.",
+        erroAtual instanceof Error
+          ? erroAtual.message
+          : "Não foi possível excluir o presente.",
       );
     }
   }
@@ -121,17 +144,17 @@ function CadastroPresente() {
     <main className="present-admin-page">
       <div className="present-admin-shell">
         <header className="present-admin-header">
-          <p>Area de organizacao</p>
-          <h1>Sugestoes de presentes</h1>
-          <span>Cadastre e organize as sugestoes exibidas aos convidados.</span>
+          <p>Área de organização</p>
+          <h1>Sugestões de presentes</h1>
+          <span>Cadastre e organize as sugestões exibidas aos convidados.</span>
         </header>
 
         <section className="present-admin-form-card">
           <div className="present-admin-card-heading">
             <span aria-hidden="true" />
             <div>
-              <h2>{editandoId ? "Editar presente" : "Novo presente"}</h2>
-              <p>A foto e opcional e pode ser adicionada por URL.</p>
+              <h2>{idEmEdicao ? "Editar presente" : "Novo presente"}</h2>
+              <p>A foto é opcional e pode ser adicionada por URL.</p>
             </div>
           </div>
 
@@ -140,8 +163,9 @@ function CadastroPresente() {
             <input
               id="presente-nome"
               value={nome}
-              onChange={(event) => setNome(event.target.value)}
-              placeholder="Ex.: Jogo de tacas"
+              onChange={(evento) => setNome(evento.target.value)}
+              placeholder="Ex.: Jogo de taças"
+              maxLength={120}
               required
             />
 
@@ -152,8 +176,9 @@ function CadastroPresente() {
               id="presente-foto"
               type="url"
               value={fotoUrl}
-              onChange={(event) => setFotoUrl(event.target.value)}
+              onChange={(evento) => setFotoUrl(evento.target.value)}
               placeholder="https://exemplo.com/imagem.jpg"
+              maxLength={500}
             />
 
             {erro && (
@@ -171,11 +196,11 @@ function CadastroPresente() {
               <button type="submit" disabled={salvando}>
                 {salvando
                   ? "Salvando..."
-                  : editandoId
-                    ? "Salvar alteracoes"
+                  : idEmEdicao
+                    ? "Salvar alterações"
                     : "Cadastrar presente"}
               </button>
-              {editandoId && (
+              {idEmEdicao && (
                 <button
                   className="button-secondary"
                   type="button"
@@ -195,7 +220,7 @@ function CadastroPresente() {
               <p>{presentes.length} item(ns) na lista</p>
             </div>
             <a href="/presentes" target="_blank" rel="noreferrer">
-              Ver pagina publica
+              Ver página pública
             </a>
           </div>
 

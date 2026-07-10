@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { apiRequest } from "../lib/api";
+import { pedirApi } from "../lib/api";
 import {
   celularValido,
   formatarCelular,
@@ -7,23 +7,23 @@ import {
   salvarPresenca,
 } from "../lib/presenca";
 
-const MAPS_URL =
+const ENDERECO_MAPA =
   "https://www.google.com/maps/search/?api=1&query=Cerimonial+Porto+Bello,+R.+Nelcy+Lopes+Vieira,+140,+Jardim+Limoeiro,+Serra+-+ES,+29164-018";
 
-type FormProps = {
+type PropriedadesFormulario = {
   onConfirmacaoChange?: (confirmado: boolean) => void;
 };
 
-type ConfirmacaoResponse = {
+type RespostaConfirmacao = {
   mensagem: string;
   atualizado: boolean;
 };
 
-type DressCodeCardProps = {
+type PropriedadesCartao = {
   className?: string;
 };
 
-function ManDressIcon() {
+function IconeTrajeMasculino() {
   return (
     <svg
       className="dress-code-avatar dress-code-avatar-man"
@@ -53,7 +53,7 @@ function ManDressIcon() {
   );
 }
 
-function WomanDressIcon() {
+function IconeTrajeFeminino() {
   return (
     <svg
       className="dress-code-avatar dress-code-avatar-woman"
@@ -88,7 +88,7 @@ function WomanDressIcon() {
   );
 }
 
-function GiftActionIcon() {
+function IconePresente() {
   return (
     <svg
       className="action-icon action-svg"
@@ -121,7 +121,7 @@ function GiftActionIcon() {
   );
 }
 
-function MapActionIcon() {
+function IconeMapa() {
   return (
     <svg
       className="action-icon action-svg"
@@ -145,7 +145,7 @@ function MapActionIcon() {
   );
 }
 
-export function DressCodeCard({ className = "" }: DressCodeCardProps) {
+export function CartaoCodigoVestimenta({ className = "" }: PropriedadesCartao) {
   return (
     <section
       className={`dress-code-card ${className}`.trim()}
@@ -156,65 +156,65 @@ export function DressCodeCard({ className = "" }: DressCodeCardProps) {
         <p className="dress-code-kicker">PARA OS XV ANOS DE</p>
         <h3 id="dress-code-title">DRESS CODE</h3>
         <strong>Isabela</strong>
-        <p className="dress-code-formality">PORTE FINO</p>
+        <p className="dress-code-formality">Esporte Fino</p>
 
         <div className="dress-code-people" aria-label="Trajes recomendados">
           <div className="dress-code-person">
             <span>HOMENS</span>
             <div className="dress-code-figure dress-code-man" aria-hidden="true">
-              <ManDressIcon />
+              <IconeTrajeMasculino />
             </div>
           </div>
 
           <div className="dress-code-person">
             <span>MULHERES</span>
             <div className="dress-code-figure dress-code-woman" aria-hidden="true">
-              <WomanDressIcon />
+              <IconeTrajeFeminino />
             </div>
           </div>
         </div>
 
         <div className="dress-code-note">
           <span>EVITE USAR</span>
-          <strong>AZUL-MARINHO E PRETO</strong>
-          <p>Essas cores est&atilde;o reservadas para a debutante.</p>
+          <strong>AZUL MARINHO E PRETO</strong>
+          <p>Essas cores estão reservadas para a debutante.</p>
         </div>
       </div>
     </section>
   );
 }
 
-type ConfirmationActionsProps = {
+type PropriedadesAcoes = {
   className?: string;
 };
 
-export function ConfirmationActions({ className = "" }: ConfirmationActionsProps) {
+export function AcoesConfirmacao({ className = "" }: PropriedadesAcoes) {
   return (
     <div className={`confirmation-actions ${className}`.trim()}>
       <a className="gift-link" href="/presentes">
         <span className="action-ornament" aria-hidden="true" />
-        <GiftActionIcon />
-        <strong>Sugest&atilde;o de Presentes</strong>
+        <IconePresente />
+        <strong>Sugestão de presentes</strong>
         <span className="action-divider" aria-hidden="true" />
-        <small>Clique para ver nossas sugest&otilde;es</small>
+        <small>Clique para ver nossas sugestões</small>
       </a>
       <a
         className="gift-link"
-        href={MAPS_URL}
+        href={ENDERECO_MAPA}
         target="_blank"
         rel="noopener noreferrer"
       >
         <span className="action-ornament" aria-hidden="true" />
-        <MapActionIcon />
-        <strong>Local do Evento</strong>
+        <IconeMapa />
+        <strong>Local do evento</strong>
         <span className="action-divider" aria-hidden="true" />
-        <small>Clique para abrir o mapa e ver o endere&ccedil;o</small>
+        <small>Clique para abrir o mapa e ver o endereço</small>
       </a>
     </div>
   );
 }
 
-function Form({ onConfirmacaoChange }: FormProps) {
+function Formulario({ onConfirmacaoChange }: PropriedadesFormulario) {
   const [nome, setNome] = useState("");
   const [celular, setCelular] = useState("");
   const [presenca, setPresenca] = useState("");
@@ -226,42 +226,46 @@ function Form({ onConfirmacaoChange }: FormProps) {
     setErro("");
 
     if (!nome.trim() || !celular.trim() || !presenca) {
-      setErro("Preencha o nome, o celular e informe sua presenca.");
+      setErro("Preencha o nome, o celular e informe sua presença.");
       return;
     }
 
     if (!celularValido(celular)) {
-      setErro("Informe um celular valido com DDD.");
+      setErro("Informe um celular válido com DDD.");
       return;
     }
 
     setCarregando(true);
 
     try {
-      const resposta = await apiRequest<ConfirmacaoResponse>("/confirmar-presenca", {
+      const nomeLimpo = nome.trim();
+      const celularLimpo = limparDigitosCelular(celular);
+      const presencaConfirmada = presenca === "sim";
+
+      const resposta = await pedirApi<RespostaConfirmacao>("/confirmar-presenca", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          nome: nome.trim(),
-          celular: limparDigitosCelular(celular),
-          presenca: presenca === "sim",
+          nome: nomeLimpo,
+          celular: celularLimpo,
+          presenca: presencaConfirmada,
         }),
       });
 
       salvarPresenca({
-        nome: nome.trim(),
-        celular: limparDigitosCelular(celular),
-        respostaPresenca: presenca === "sim" ? "sim" : "nao",
+        nome: nomeLimpo,
+        celular: celularLimpo,
+        respostaPresenca: presencaConfirmada ? "sim" : "nao",
         mensagem: resposta.mensagem,
       });
       onConfirmacaoChange?.(true);
       window.location.href =
-        presenca === "sim" ? "/prensencaconfirmada" : "/presencanaoconfirmada";
+        presencaConfirmada ? "/presencaconfirmada" : "/presencanaoconfirmada";
     } catch (error) {
       setErro(
         error instanceof Error
           ? error.message
-          : "Nao foi possivel registrar sua confirmacao.",
+          : "Não foi possível registrar sua confirmação.",
       );
     } finally {
       setCarregando(false);
@@ -272,7 +276,7 @@ function Form({ onConfirmacaoChange }: FormProps) {
     <div className="form">
       <form onSubmit={handleSubmit}>
         <div className="form-heading">
-          <span>Confirme sua presen&ccedil;a</span>
+          <span>Confirme sua presença</span>
         </div>
 
         <label htmlFor="nome">Nome</label>
@@ -282,6 +286,7 @@ function Form({ onConfirmacaoChange }: FormProps) {
           placeholder="Digite seu nome"
           value={nome}
           onChange={(event) => setNome(event.target.value)}
+          maxLength={100}
           required
         />
 
@@ -293,10 +298,11 @@ function Form({ onConfirmacaoChange }: FormProps) {
           placeholder="(27) 99999-9999"
           value={celular}
           onChange={(event) => setCelular(formatarCelular(event.target.value))}
+          maxLength={15}
           required
         />
 
-        <p>Voc&ecirc; confirma sua presen&ccedil;a?</p>
+        <p>Você confirma sua presença?</p>
         <div className="radio-group">
           <label className="radio-option">
             <input
@@ -318,7 +324,7 @@ function Form({ onConfirmacaoChange }: FormProps) {
               checked={presenca === "nao"}
               onChange={() => setPresenca("nao")}
             />
-            <span>N&atilde;o</span>
+            <span>Não</span>
           </label>
         </div>
 
@@ -332,4 +338,4 @@ function Form({ onConfirmacaoChange }: FormProps) {
   );
 }
 
-export default Form;
+export default Formulario;

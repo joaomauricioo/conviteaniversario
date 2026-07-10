@@ -2,16 +2,16 @@ import "dotenv/config";
 import { app } from "./app";
 import { prisma } from "./lib/prisma";
 
-const port = Number(process.env.PORT) || 3000;
+const porta = Number(process.env.PORT) || 3000;
 
-const server = app.listen(port, () => {
-  console.log(`API disponivel em http://localhost:${port}`);
+const servidor = app.listen(porta, () => {
+  console.log(`API disponível em http://localhost:${porta}`);
 });
 
-async function shutdown() {
+async function desligarServidor() {
   await prisma.$disconnect();
-  server.close(() => process.exit(0));
+  servidor.close(() => process.exit(0));
 }
 
-process.on("SIGINT", shutdown);
-process.on("SIGTERM", shutdown);
+process.on("SIGINT", desligarServidor);
+process.on("SIGTERM", desligarServidor);

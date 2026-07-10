@@ -1,22 +1,34 @@
-const API_URL = (import.meta.env.VITE_API_URL ?? "http://localhost:3000").replace(
+const ENDERECO_API = (import.meta.env.VITE_API_URL ?? "http://localhost:3000").replace(
   /\/$/,
   "",
 );
 
-type ApiError = {
+type ErroDaApi = {
   mensagem?: string;
 };
 
-export async function apiRequest<T>(
-  path: string,
-  options?: RequestInit,
-): Promise<T> {
-  const response = await fetch(`${API_URL}${path}`, options);
-  const data = (await response.json().catch(() => ({}))) as T & ApiError;
+export class ErroApi extends Error {
+  status: number;
 
-  if (!response.ok) {
-    throw new Error(data.mensagem ?? "Nao foi possivel comunicar com a API.");
+  constructor(mensagem: string, status: number) {
+    super(mensagem);
+    this.status = status;
+  }
+}
+
+export async function pedirApi<T>(
+  caminho: string,
+  opcoes?: RequestInit,
+): Promise<T> {
+  const resposta = await fetch(`${ENDERECO_API}${caminho}`, opcoes);
+  const dados = (await resposta.json().catch(() => ({}))) as T & ErroDaApi;
+
+  if (!resposta.ok) {
+    throw new ErroApi(
+      dados.mensagem ?? "Não foi possível comunicar com a API.",
+      resposta.status,
+    );
   }
 
-  return data;
+  return dados;
 }
