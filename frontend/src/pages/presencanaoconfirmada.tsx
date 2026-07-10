@@ -19,6 +19,11 @@ function PresencaNaoConfirmada() {
             {presencaSalva.mensagem ??
               "Sua resposta foi registrada com carinho. Obrigada por avisar."}
           </p>
+          <div className="presence-update-action">
+            <a className="presence-update-button" href="/confirmar-presenca">
+              Atualizar presença
+            </a>
+          </div>
         </section>
       </main>
     </div>

@@ -5,6 +5,7 @@ import {
   formatarCelular,
   limparDigitosCelular,
   salvarPresenca,
+  type PresencaSalva,
 } from "../lib/presenca";
 
 const ENDERECO_MAPA =
@@ -12,6 +13,7 @@ const ENDERECO_MAPA =
 
 type PropriedadesFormulario = {
   onConfirmacaoChange?: (confirmado: boolean) => void;
+  presencaInicial?: PresencaSalva | null;
 };
 
 type RespostaConfirmacao = {
@@ -214,10 +216,12 @@ export function AcoesConfirmacao({ className = "" }: PropriedadesAcoes) {
   );
 }
 
-function Formulario({ onConfirmacaoChange }: PropriedadesFormulario) {
-  const [nome, setNome] = useState("");
-  const [celular, setCelular] = useState("");
-  const [presenca, setPresenca] = useState("");
+function Formulario({ onConfirmacaoChange, presencaInicial }: PropriedadesFormulario) {
+  const [nome, setNome] = useState(presencaInicial?.nome ?? "");
+  const [celular, setCelular] = useState(
+    presencaInicial ? formatarCelular(presencaInicial.celular) : "",
+  );
+  const [presenca, setPresenca] = useState(presencaInicial?.respostaPresenca ?? "");
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState("");
 

@@ -1,5 +1,4 @@
-import { timingSafeEqual } from "crypto";
-import cors from "cors";
+import cors, { type CorsOptions } from "cors";
 import express, { type ErrorRequestHandler, type RequestHandler } from "express";
 import { z } from "zod";
 import { prisma } from "./lib/prisma";
@@ -82,10 +81,36 @@ const editarPresenteSchema = presenteSchema
 
 const presenteIdSchema = z.string().uuid("O identificador do presente é inválido.");
 
-function buscarOrigensPermitidas() {
+function origemLocalDesenvolvimento(origem: string) {
+  if (process.env.NODE_ENV === "production") return false;
+
+  try {
+    const { hostname } = new URL(origem);
+    return hostname === "localhost" || hostname === "127.0.0.1";
+  } catch {
+    return false;
+  }
+}
+
+function buscarOrigensPermitidas(): CorsOptions["origin"] {
   const origensConfiguradas = process.env.FRONTEND_URL?.split(",")
     .map((origem) => origem.trim())
     .filter(Boolean);
+
+  if (process.env.NODE_ENV !== "production") {
+    return (origem, callback) => {
+      if (
+        !origem ||
+        origemLocalDesenvolvimento(origem) ||
+        origensConfiguradas?.includes(origem)
+      ) {
+        callback(null, true);
+        return;
+      }
+
+      callback(null, false);
+    };
+  }
 
   if (origensConfiguradas?.length) return origensConfiguradas;
   return process.env.NODE_ENV === "production" ? [] : true;
@@ -96,32 +121,6 @@ const adicionarCabecalhosSeguros: RequestHandler = (_pedido, resposta, proximo) 
   resposta.setHeader("X-Frame-Options", "DENY");
   resposta.setHeader("Referrer-Policy", "no-referrer");
   resposta.setHeader("Cache-Control", "no-store");
-  proximo();
-};
-
-function tokenIgual(tokenRecebido: string, tokenEsperado: string) {
-  const recebido = Buffer.from(tokenRecebido);
-  const esperado = Buffer.from(tokenEsperado);
-
-  return recebido.length === esperado.length && timingSafeEqual(recebido, esperado);
-}
-
-const conferirAdministrador: RequestHandler = (pedido, resposta, proximo) => {
-  const tokenEsperado = process.env.ADMIN_TOKEN;
-  const tokenRecebido = pedido.header("x-admin-token") ?? "";
-
-  if (!tokenEsperado) {
-    resposta.status(503).json({
-      mensagem: "Token de administrador não configurado no servidor.",
-    });
-    return;
-  }
-
-  if (!tokenIgual(tokenRecebido, tokenEsperado)) {
-    resposta.status(401).json({ mensagem: "Acesso administrativo não autorizado." });
-    return;
-  }
-
   proximo();
 };
 
@@ -138,7 +137,7 @@ app.use(adicionarCabecalhosSeguros);
 app.use(
   cors({
     origin: buscarOrigensPermitidas(),
-    allowedHeaders: ["Content-Type", "x-admin-token"],
+    allowedHeaders: ["Content-Type"],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   }),
 );
@@ -208,7 +207,7 @@ app.get("/presentes", async (_pedido, resposta, proximo) => {
   }
 });
 
-app.post("/presentes", conferirAdministrador, async (pedido, resposta, proximo) => {
+app.post("/presentes", async (pedido, resposta, proximo) => {
   try {
     const resultado = presenteSchema.safeParse(pedido.body);
 
@@ -230,7 +229,7 @@ app.post("/presentes", conferirAdministrador, async (pedido, resposta, proximo) 
   }
 });
 
-app.put("/presentes/:id", conferirAdministrador, async (pedido, resposta, proximo) => {
+app.put("/presentes/:id", async (pedido, resposta, proximo) => {
   try {
     const resultadoId = presenteIdSchema.safeParse(pedido.params.id);
     const resultado = editarPresenteSchema.safeParse(pedido.body);
@@ -271,7 +270,6 @@ app.put("/presentes/:id", conferirAdministrador, async (pedido, resposta, proxim
 
 app.delete(
   "/presentes/:id",
-  conferirAdministrador,
   async (pedido, resposta, proximo) => {
     try {
       const resultadoId = presenteIdSchema.safeParse(pedido.params.id);
@@ -300,7 +298,7 @@ app.delete(
   },
 );
 
-app.get("/relatorio", conferirAdministrador, async (_pedido, resposta, proximo) => {
+app.get("/relatorio", async (_pedido, resposta, proximo) => {
   try {
     const [totalGeral, totalConfirmados, convidados] = await prisma.$transaction([
       prisma.convidado.count(),

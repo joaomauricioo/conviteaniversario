@@ -25,7 +25,6 @@ No arquivo `backend/.env`, configure:
 DATABASE_URL=postgresql://usuario:senha@localhost:5432/convite
 PORT=3000
 FRONTEND_URL=http://localhost:5173
-ADMIN_TOKEN=crie-um-token-seguro
 ```
 
 A API roda em:
@@ -58,7 +57,6 @@ http://localhost:5173
 - `http://localhost:5173/cadastropresente` - cadastro administrativo de presentes
 - `http://localhost:5173/relatorio` - relatório administrativo de confirmações
 
-As páginas administrativas pedem o `ADMIN_TOKEN` configurado no backend.
 
 ## Scripts Úteis
 

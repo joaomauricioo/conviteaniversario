@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { pedirApiAdministrativa } from "../lib/administrador";
+import { pedirApi } from "../lib/api";
 import { formatarCelular } from "../lib/presenca";
 
 type Convidado = {
@@ -62,7 +62,7 @@ function Relatorio() {
   const [mensagemExportacao, setMensagemExportacao] = useState("");
 
   useEffect(() => {
-    pedirApiAdministrativa<DadosRelatorio>("/relatorio")
+    pedirApi<DadosRelatorio>("/relatorio")
       .then(setDados)
       .catch((erroAtual: unknown) => {
         setErro(

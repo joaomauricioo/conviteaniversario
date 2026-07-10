@@ -12,6 +12,7 @@ function App() {
   if (caminho === "/relatorio") return <Relatorio />;
   if (caminho === "/cadastropresente") return <CadastroPresente />;
   if (caminho === "/presentes") return <Presentes />;
+  if (caminho === "/confirmar-presenca") return <Inicio permitirAtualizacao />;
   if (caminho === "/prensencaconfirmada") return <PresencaConfirmada />;
   if (caminho === "/presencaconfirmada") return <PresencaConfirmada />;
   if (caminho === "/presencanaoconfirmada") return <PresencaNaoConfirmada />;

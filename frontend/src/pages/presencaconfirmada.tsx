@@ -33,6 +33,12 @@ function PresencaConfirmada() {
           <CartaoCodigoVestimenta className="dress-code-card-hero" />
           <AcoesConfirmacao className="confirmation-actions-cards" />
         </section>
+
+        <div className="presence-update-action">
+          <a className="presence-update-button" href="/confirmar-presenca">
+            Atualizar presença
+          </a>
+        </div>
       </main>
     </div>
   );

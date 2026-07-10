@@ -3,11 +3,20 @@ import { carregarPresencaSalva } from "../lib/presenca";
 import PresencaConfirmada from "./presencaconfirmada";
 import PresencaNaoConfirmada from "./presencanaoconfirmada";
 
-function Inicio() {
+type PropriedadesInicio = {
+  permitirAtualizacao?: boolean;
+};
+
+function Inicio({ permitirAtualizacao = false }: PropriedadesInicio) {
   const presencaSalva = carregarPresencaSalva();
 
-  if (presencaSalva?.respostaPresenca === "sim") return <PresencaConfirmada />;
-  if (presencaSalva?.respostaPresenca === "nao") return <PresencaNaoConfirmada />;
+  if (!permitirAtualizacao && presencaSalva?.respostaPresenca === "sim") {
+    return <PresencaConfirmada />;
+  }
+
+  if (!permitirAtualizacao && presencaSalva?.respostaPresenca === "nao") {
+    return <PresencaNaoConfirmada />;
+  }
 
   return (
     <div className="invite-page">
@@ -28,7 +37,7 @@ function Inicio() {
           </p>
         </section>
 
-        <Formulario />
+        <Formulario presencaInicial={permitirAtualizacao ? presencaSalva : null} />
       </main>
     </div>
   );

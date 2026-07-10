@@ -298,7 +298,8 @@ a {
 
 .form button:hover,
 .present-admin-form-card button:hover,
-.admin-present-actions button:hover {
+.admin-present-actions button:hover,
+.presence-update-button:hover {
   transform: translateY(-2px);
   filter: brightness(1.06);
   box-shadow: 0 18px 45px rgba(255, 255, 255, 0.24);
@@ -1532,7 +1533,7 @@ a {
   gap: clamp(8px, 1vw, 12px);
   width: min(100%, 780px);
   margin-top: clamp(4px, 0.8vh, 8px);
-  padding: clamp(7px, 0.8vw, 10px);
+  padding: 0;
 }
 
 .confirmed-page .confirmation-actions-cards {
@@ -1547,9 +1548,9 @@ a {
 .confirmed-page .dress-code-inner {
   grid-template-columns: minmax(158px, 1fr) minmax(96px, 0.68fr);
   gap: 2px clamp(8px, 0.9vw, 12px);
-  min-height: clamp(180px, 26vh, 224px);
+  min-height: clamp(60px, 26vh, 104px);
   margin: 6px;
-  padding: clamp(12px, 1.5vh, 16px) clamp(10px, 1.2vw, 14px);
+  padding: clamp(8px, 1vh, 10px) clamp(8px, 1vw, 12px);
 }
 
 .confirmed-page .dress-code-inner::before,
@@ -1588,8 +1589,8 @@ a {
 
 .confirmed-page .dress-code-people {
   gap: clamp(8px, 1.1vw, 12px);
-  margin-top: clamp(3px, 0.7vh, 7px);
-  padding-top: 10px;
+  margin-top: 0;
+  padding-top: 6px;
 }
 
 .confirmed-page .dress-code-person {
@@ -1598,8 +1599,8 @@ a {
 }
 
 .confirmed-page .dress-code-figure {
-  width: clamp(48px, 6.2vh, 62px);
-  height: clamp(70px, 9.8vh, 90px);
+  width: clamp(42px, 5.2vh, 52px);
+  height: clamp(58px, 8vh, 72px);
 }
 
 .confirmed-page .figure-head {
@@ -1655,7 +1656,7 @@ a {
 
 .confirmed-page .dress-code-note {
   gap: clamp(4px, 0.8vh, 7px);
-  padding: clamp(10px, 1.2vh, 14px) clamp(6px, 0.8vw, 10px);
+  padding: clamp(6px, 0.8vh, 9px) clamp(6px, 0.8vw, 10px);
 }
 
 .confirmed-page .dress-code-note strong {
@@ -1671,9 +1672,9 @@ a {
 .confirmed-page .gift-link {
   width: 100%;
   min-width: 0;
-  min-height: clamp(180px, 26vh, 224px);
-  gap: clamp(7px, 1.1vh, 11px);
-  padding: clamp(18px, 2.2vh, 24px) clamp(10px, 1vw, 14px);
+  min-height: clamp(60px, 26vh, 104px);
+  gap: clamp(5px, 0.8vh, 8px);
+  padding: clamp(12px, 1.5vh, 16px) clamp(10px, 1vw, 14px);
 }
 
 .confirmed-page .action-ornament {
@@ -1681,9 +1682,9 @@ a {
 }
 
 .confirmed-page .action-icon {
-  width: clamp(44px, 6.4vh, 58px);
-  height: clamp(44px, 6.4vh, 58px);
-  margin-top: clamp(4px, 1vh, 10px);
+  width: clamp(38px, 5.2vh, 48px);
+  height: clamp(38px, 5.2vh, 48px);
+  margin-top: clamp(2px, 0.6vh, 6px);
 }
 
 .confirmed-page .action-svg {
@@ -1789,6 +1790,33 @@ a {
 .declined-note {
   color: #cfd6dd !important;
   font-size: clamp(0.9rem, 2vw, 1.05rem) !important;
+}
+
+.presence-update-action {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-top: clamp(8px, 1.4vh, 14px);
+}
+
+.presence-update-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: min(100%, 260px);
+  min-height: 48px;
+  padding: 0 24px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #f7f7f7, #aeb5bc 54%, #ffffff);
+  color: #050505;
+  font: inherit;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-align: center;
+  text-decoration: none;
+  text-transform: uppercase;
+  box-shadow: 0 14px 35px rgba(255, 255, 255, 0.16);
+  transition: transform 180ms ease, box-shadow 180ms ease, filter 180ms ease;
 }
 
 @media (min-width: 1024px) {

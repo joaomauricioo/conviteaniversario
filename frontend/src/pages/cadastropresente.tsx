@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { pedirApi } from "../lib/api";
-import { pedirApiAdministrativa } from "../lib/administrador";
 
 type Presente = {
   id: string;
@@ -84,7 +83,7 @@ function CadastroPresente() {
 
     try {
       const caminho = idEmEdicao ? `/presentes/${idEmEdicao}` : "/presentes";
-      const resposta = await pedirApiAdministrativa<RespostaMensagem>(caminho, {
+      const resposta = await pedirApi<RespostaMensagem>(caminho, {
         method: idEmEdicao ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -123,7 +122,7 @@ function CadastroPresente() {
     setSucesso("");
 
     try {
-      const resposta = await pedirApiAdministrativa<RespostaMensagem>(
+      const resposta = await pedirApi<RespostaMensagem>(
         `/presentes/${presente.id}`,
         { method: "DELETE" },
       );
