@@ -1,6 +1,15 @@
 import cors, { type CorsOptions } from "cors";
 import express, { type ErrorRequestHandler, type RequestHandler } from "express";
+import helmet from "helmet";
 import { z } from "zod";
+import {
+  exigirAdminAutenticado,
+  exigirCsrfAdmin,
+  limitarTentativasLogin,
+  loginAdmin,
+  logoutAdmin,
+  obterSessaoAdmin,
+} from "./lib/admin-auth";
 import { prisma } from "./lib/prisma";
 
 function limparTexto(texto: string) {
@@ -133,11 +142,14 @@ function erroDeValidacao(resultado: z.ZodError) {
 
 export const app = express();
 
+app.set("trust proxy", 1);
+app.use(helmet());
 app.use(adicionarCabecalhosSeguros);
 app.use(
   cors({
     origin: buscarOrigensPermitidas(),
-    allowedHeaders: ["Content-Type"],
+    credentials: true,
+    allowedHeaders: ["Content-Type", "X-CSRF-Token"],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   }),
 );
@@ -146,6 +158,10 @@ app.use(express.json({ limit: "20kb" }));
 app.get("/", (_pedido, resposta) => {
   resposta.json({ mensagem: "API do convite de aniversário está funcionando." });
 });
+
+app.post("/admin/login", limitarTentativasLogin, loginAdmin);
+app.get("/admin/sessao", exigirAdminAutenticado, obterSessaoAdmin);
+app.post("/admin/logout", exigirAdminAutenticado, exigirCsrfAdmin, logoutAdmin);
 
 app.post("/confirmar-presenca", async (pedido, resposta, proximo) => {
   try {
@@ -207,7 +223,11 @@ app.get("/presentes", async (_pedido, resposta, proximo) => {
   }
 });
 
-app.post("/presentes", async (pedido, resposta, proximo) => {
+app.post(
+  "/presentes",
+  exigirAdminAutenticado,
+  exigirCsrfAdmin,
+  async (pedido, resposta, proximo) => {
   try {
     const resultado = presenteSchema.safeParse(pedido.body);
 
@@ -227,9 +247,14 @@ app.post("/presentes", async (pedido, resposta, proximo) => {
   } catch (erro) {
     proximo(erro);
   }
-});
+  },
+);
 
-app.put("/presentes/:id", async (pedido, resposta, proximo) => {
+app.put(
+  "/presentes/:id",
+  exigirAdminAutenticado,
+  exigirCsrfAdmin,
+  async (pedido, resposta, proximo) => {
   try {
     const resultadoId = presenteIdSchema.safeParse(pedido.params.id);
     const resultado = editarPresenteSchema.safeParse(pedido.body);
@@ -266,10 +291,13 @@ app.put("/presentes/:id", async (pedido, resposta, proximo) => {
   } catch (erro) {
     proximo(erro);
   }
-});
+  },
+);
 
 app.delete(
   "/presentes/:id",
+  exigirAdminAutenticado,
+  exigirCsrfAdmin,
   async (pedido, resposta, proximo) => {
     try {
       const resultadoId = presenteIdSchema.safeParse(pedido.params.id);
@@ -298,7 +326,7 @@ app.delete(
   },
 );
 
-app.get("/relatorio", async (_pedido, resposta, proximo) => {
+app.get("/relatorio", exigirAdminAutenticado, async (_pedido, resposta, proximo) => {
   try {
     const [totalGeral, totalConfirmados, convidados] = await prisma.$transaction([
       prisma.convidado.count(),

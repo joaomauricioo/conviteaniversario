@@ -15,10 +15,6 @@ function PresencaNaoConfirmada() {
           <span className="success-icon" aria-hidden="true" />
           <h1>Que pena, {presencaSalva.nome}.</h1>
           <p>Sentiremos sua falta nesse dia tão especial.</p>
-          <p className="declined-note">
-            {presencaSalva.mensagem ??
-              "Sua resposta foi registrada com carinho. Obrigada por avisar."}
-          </p>
           <div className="presence-update-action">
             <a className="presence-update-button" href="/confirmar-presenca">
               Atualizar presença

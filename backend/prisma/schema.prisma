@@ -27,3 +27,15 @@ model Presente {
 
   @@map("presentes")
 }
+
+model Administrador {
+  id        String   @id @default(uuid()) @db.Uuid
+  usuario   String?  @unique
+  email     String?  @unique
+  senhaHash String
+  ativo     Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("administradores")
+}

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { pedirApi } from "../lib/api";
+import { pedirApiAdmin, sairAdmin } from "../lib/admin";
 import { formatarCelular } from "../lib/presenca";
 
 type Convidado = {
@@ -62,7 +62,7 @@ function Relatorio() {
   const [mensagemExportacao, setMensagemExportacao] = useState("");
 
   useEffect(() => {
-    pedirApi<DadosRelatorio>("/relatorio")
+    pedirApiAdmin<DadosRelatorio>("/relatorio")
       .then(setDados)
       .catch((erroAtual: unknown) => {
         setErro(
@@ -160,13 +160,27 @@ function Relatorio() {
     documento.save(`${nomeArquivoRelatorio}.pdf`);
   }
 
+  async function encerrarSessao() {
+    await sairAdmin();
+    window.location.replace("/login");
+  }
+
   return (
     <main className="report-page">
       <div className="report-shell">
         <header className="report-header">
+          <div>
           <p className="report-kicker">Convite de aniversário</p>
           <h1>Relatório de presença</h1>
           <p>Acompanhe as respostas recebidas pelo convite.</p>
+          </div>
+          <button
+            className="admin-logout-button"
+            type="button"
+            onClick={() => void encerrarSessao()}
+          >
+            Sair
+          </button>
         </header>
 
         {erro && <div className="report-message report-error">{erro}</div>}

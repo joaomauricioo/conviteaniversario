@@ -1,6 +1,7 @@
-# Convite de Aniversário
+# Convite de Aniversario
 
-Projeto de convite online com confirmação de presença, lista de presentes e relatório administrativo.
+Projeto de convite online com confirmacao de presenca, lista publica de
+presentes e area administrativa protegida.
 
 ## Tecnologias
 
@@ -9,7 +10,7 @@ Projeto de convite online com confirmação de presença, lista de presentes e r
 
 ## Como Rodar
 
-### 1. Backend
+### Backend
 
 ```bash
 cd backend
@@ -19,21 +20,10 @@ npm run prisma:migrate
 npm run dev
 ```
 
-No arquivo `backend/.env`, configure:
+Preencha `backend/.env` com os valores reais apenas no seu ambiente local ou no
+provedor de deploy.
 
-```env
-DATABASE_URL=postgresql://usuario:senha@localhost:5432/convite
-PORT=3000
-FRONTEND_URL=http://localhost:5173
-```
-
-A API roda em:
-
-```text
-http://localhost:3000
-```
-
-### 2. Frontend
+### Frontend
 
 ```bash
 cd frontend
@@ -42,23 +32,26 @@ copy .env.example .env
 npm run dev
 ```
 
-O site roda em:
+Preencha `frontend/.env` com a URL da API quando ela nao estiver no mesmo dominio.
 
-```text
-http://localhost:5173
-```
+## Paginas
 
-## Páginas
+- `/` - convite e confirmacao de presenca
+- `/presencaconfirmada` - presenca confirmada
+- `/presencanaoconfirmada` - presenca nao confirmada
+- `/presentes` - lista publica de presentes
+- `/login` - login administrativo
+- `/cadastropresente` - cadastro administrativo de presentes
+- `/relatorio` - relatorio administrativo de confirmacoes
 
-- `http://localhost:5173/` - convite e confirmação de presença
-- `http://localhost:5173/presencaconfirmada` - presença confirmada
-- `http://localhost:5173/presencanaoconfirmada` - presença não confirmada
-- `http://localhost:5173/presentes` - lista pública de presentes
-- `http://localhost:5173/cadastropresente` - cadastro administrativo de presentes
-- `http://localhost:5173/relatorio` - relatório administrativo de confirmações
+## Segurança
 
+- Nao commite arquivos `.env`.
+- Senhas de administradores devem ser armazenadas somente com hash bcrypt.
+- Rotas administrativas sao protegidas no backend por sessao httpOnly e CSRF.
+- Configure `FRONTEND_URL` apenas com os dominios autorizados.
 
-## Scripts Úteis
+## Scripts Uteis
 
 Frontend:
 
@@ -76,11 +69,3 @@ npm run build
 npm run prisma:migrate
 npm run prisma:studio
 ```
-
-## Funcionalidades
-
-- Confirmação de presença com nome e celular
-- Atualização de resposta pelo mesmo celular
-- Lista pública de sugestões de presentes
-- Cadastro, edição e exclusão de presentes
-- Relatório com totais e exportação em Excel/PDF

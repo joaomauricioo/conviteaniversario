@@ -43,15 +43,10 @@ function Presentes() {
 
   return (
     <main className="presents-page">
-      <div className="presents-stars" aria-hidden="true" />
       <div className="presents-shell">
         <header className="presents-header">
           <p>Sugestões especiais</p>
           <h1>Lista de presentes</h1>
-          <span>
-            Sua presença já é um presente. Caso queira nos
-            mimar, reunimos algumas ideias por aqui.
-          </span>
         </header>
 
         {carregando && (

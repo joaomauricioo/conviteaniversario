@@ -25,71 +25,6 @@ type PropriedadesCartao = {
   className?: string;
 };
 
-function IconeTrajeMasculino() {
-  return (
-    <svg
-      className="dress-code-avatar dress-code-avatar-man"
-      viewBox="0 0 90 150"
-      aria-hidden="true"
-      focusable="false"
-    >
-      <ellipse cx="45" cy="145" rx="26" ry="4" fill="#d7dbe0" opacity="0.65" />
-      <path d="M31 55h28l7 48H24z" fill="#070707" />
-      <path d="M34 54l11 26 11-26z" fill="#ffffff" />
-      <path d="M39 58l6 7 6-7-6 26z" fill="#061b3a" />
-      <path d="M29 57c-7 9-11 27-10 49h9c1-18 4-34 9-45z" fill="#111111" />
-      <path d="M61 57c7 9 11 27 10 49h-9c-1-18-4-34-9-45z" fill="#111111" />
-      <path d="M30 102h14v39H30z" fill="#080808" />
-      <path d="M47 102h14v39H47z" fill="#080808" />
-      <path d="M28 139h18v6H28z" fill="#050505" />
-      <path d="M45 139h18v6H45z" fill="#050505" />
-      <circle cx="45" cy="31" r="16" fill="#f0c9ad" />
-      <path
-        d="M29 29c2-12 11-18 24-15 8 2 12 7 13 14-7-7-23-9-37 1z"
-        fill="#141414"
-      />
-      <path d="M31 32c2 9 7 15 14 15s12-6 14-15c-8 3-19 3-28 0z" fill="#edc6aa" />
-      <path d="M39 54h12l-6 8z" fill="#f5f5f5" />
-      <path d="M59 59h6v4h-6z" fill="#f5f5f5" />
-    </svg>
-  );
-}
-
-function IconeTrajeFeminino() {
-  return (
-    <svg
-      className="dress-code-avatar dress-code-avatar-woman"
-      viewBox="0 0 100 150"
-      aria-hidden="true"
-      focusable="false"
-    >
-      <ellipse cx="50" cy="145" rx="34" ry="4" fill="#d7dbe0" opacity="0.65" />
-      <path
-        d="M21 142c8-46 13-76 29-91 16 15 22 45 30 91z"
-        fill="#061b3a"
-      />
-      <path
-        d="M32 142c7-38 12-64 18-82 8 18 13 44 20 82z"
-        fill="#0b2f62"
-        opacity="0.88"
-      />
-      <path d="M36 58c6-9 22-9 28 0l-5 22H41z" fill="#103b72" />
-      <path d="M41 57h18l-9 10z" fill="#f0c9ad" />
-      <path d="M34 64c-7 11-10 25-11 42h7c2-16 6-29 12-40z" fill="#f0c9ad" />
-      <path d="M66 64c7 11 10 25 11 42h-7c-2-16-6-29-12-40z" fill="#f0c9ad" />
-      <circle cx="50" cy="35" r="15" fill="#f0c9ad" />
-      <path
-        d="M36 35c-2-12 5-22 17-22 10 0 17 8 16 20-10-8-22-8-33 2z"
-        fill="#171313"
-      />
-      <circle cx="33" cy="30" r="9" fill="#171313" />
-      <circle cx="67" cy="30" r="9" fill="#171313" />
-      <path d="M37 37c4 8 8 12 13 12s10-4 13-12c-7 3-18 3-26 0z" fill="#edc6aa" />
-      <path d="M36 58c7 5 21 5 28 0l-3 12H39z" fill="#061b3a" />
-    </svg>
-  );
-}
-
 function IconePresente() {
   return (
     <svg
@@ -151,37 +86,13 @@ export function CartaoCodigoVestimenta({ className = "" }: PropriedadesCartao) {
   return (
     <section
       className={`dress-code-card ${className}`.trim()}
-      aria-labelledby="dress-code-title"
+      aria-label="Dress code para os XV anos de Isabela"
     >
-      <div className="dress-code-inner">
-        <span className="dress-code-crown" aria-hidden="true" />
-        <p className="dress-code-kicker">PARA OS XV ANOS DE</p>
-        <h3 id="dress-code-title">DRESS CODE</h3>
-        <strong>Isabela</strong>
-        <p className="dress-code-formality">Esporte Fino</p>
-
-        <div className="dress-code-people" aria-label="Trajes recomendados">
-          <div className="dress-code-person">
-            <span>HOMENS</span>
-            <div className="dress-code-figure dress-code-man" aria-hidden="true">
-              <IconeTrajeMasculino />
-            </div>
-          </div>
-
-          <div className="dress-code-person">
-            <span>MULHERES</span>
-            <div className="dress-code-figure dress-code-woman" aria-hidden="true">
-              <IconeTrajeFeminino />
-            </div>
-          </div>
-        </div>
-
-        <div className="dress-code-note">
-          <span>EVITE USAR</span>
-          <strong>AZUL MARINHO E PRETO</strong>
-          <p>Essas cores estão reservadas para a debutante.</p>
-        </div>
-      </div>
+      <img
+        className="dress-code-image"
+        src="/dress-code-isabela.png"
+        alt="Dress code para os XV anos de Isabela: homens e mulheres em traje formal. Azul-marinho e preto estao reservados para a debutante."
+      />
     </section>
   );
 }

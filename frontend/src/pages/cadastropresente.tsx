@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { pedirApiAdmin, sairAdmin } from "../lib/admin";
 import { pedirApi } from "../lib/api";
 
 type Presente = {
@@ -83,7 +84,7 @@ function CadastroPresente() {
 
     try {
       const caminho = idEmEdicao ? `/presentes/${idEmEdicao}` : "/presentes";
-      const resposta = await pedirApi<RespostaMensagem>(caminho, {
+      const resposta = await pedirApiAdmin<RespostaMensagem>(caminho, {
         method: idEmEdicao ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -122,7 +123,7 @@ function CadastroPresente() {
     setSucesso("");
 
     try {
-      const resposta = await pedirApi<RespostaMensagem>(
+      const resposta = await pedirApiAdmin<RespostaMensagem>(
         `/presentes/${presente.id}`,
         { method: "DELETE" },
       );
@@ -139,13 +140,27 @@ function CadastroPresente() {
     }
   }
 
+  async function encerrarSessao() {
+    await sairAdmin();
+    window.location.replace("/login");
+  }
+
   return (
     <main className="present-admin-page">
       <div className="present-admin-shell">
         <header className="present-admin-header">
+          <div>
           <p>Área de organização</p>
           <h1>Sugestões de presentes</h1>
           <span>Cadastre e organize as sugestões exibidas aos convidados.</span>
+          </div>
+          <button
+            className="admin-logout-button"
+            type="button"
+            onClick={() => void encerrarSessao()}
+          >
+            Sair
+          </button>
         </header>
 
         <section className="present-admin-form-card">

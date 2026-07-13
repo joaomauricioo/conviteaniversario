@@ -17,7 +17,10 @@ export async function pedirApi<T>(
   caminho: string,
   opcoes?: RequestInit,
 ): Promise<T> {
-  const resposta = await fetch(`${ENDERECO_API}${caminho}`, opcoes);
+  const resposta = await fetch(`${ENDERECO_API}${caminho}`, {
+    credentials: "include",
+    ...opcoes,
+  });
   const dados = (await resposta.json().catch(() => ({}))) as T & ErroDaApi;
 
   if (!resposta.ok) {
