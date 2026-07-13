@@ -14,7 +14,7 @@ function PresencaNaoConfirmada() {
         <section className="declined-card" role="status">
           <span className="success-icon" aria-hidden="true" />
           <h1>Que pena, {presencaSalva.nome}.</h1>
-          <p>Sentiremos sua falta nesse dia tão especial.</p>
+          <p>Sentirei sua falta nesse dia tão especial.</p>
           <div className="presence-update-action">
             <a className="presence-update-button" href="/confirmar-presenca">
               Atualizar presença
