@@ -1307,7 +1307,7 @@ a {
   width: 100%;
   min-width: 0;
   min-height: clamp(60px, 26vh, 104px);
-  gap: clamp(5px, 0.8vh, 8px);
+  gap: clamp(3px, 0.6vh, 6px);
   padding: clamp(12px, 1.5vh, 16px) clamp(10px, 1vw, 14px);
 }
 
@@ -1319,10 +1319,16 @@ a {
   width: clamp(60px, 8vh, 76px);
   height: clamp(60px, 8vh, 76px);
   margin-top: 0;
+  margin-bottom: clamp(2px, 0.4vh, 4px);
+}
+
+.confirmed-page .action-icon img {
+  object-fit: contain;
 }
 
 .confirmed-page .gift-link strong {
   max-width: 160px;
+  min-height: 2.32em;
   font-size: clamp(1rem, 1.55vw, 1.32rem);
   line-height: 1.16;
   letter-spacing: 0.01em;
@@ -1334,6 +1340,7 @@ a {
 
 .confirmed-page .gift-link small {
   max-width: 160px;
+  min-height: 4.08em;
   font-size: clamp(0.7rem, 1vw, 0.86rem);
   line-height: 1.36;
 }
