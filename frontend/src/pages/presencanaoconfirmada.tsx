@@ -12,7 +12,9 @@ function PresencaNaoConfirmada() {
     <div className="invite-page declined-page">
       <main className="declined-shell">
         <section className="declined-card" role="status">
-          <span className="success-icon" aria-hidden="true" />
+          <span className="image-icon success-icon" aria-hidden="true">
+            <img src="/icone-estrela.png" alt="" />
+          </span>
           <h1>Que pena, {presencaSalva.nome}.</h1>
           <p>Sentirei sua falta nesse dia tão especial.</p>
           <div className="presence-update-action">

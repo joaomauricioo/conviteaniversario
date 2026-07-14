@@ -165,7 +165,9 @@ function CadastroPresente() {
 
         <section className="present-admin-form-card">
           <div className="present-admin-card-heading">
-            <span aria-hidden="true" />
+            <span className="image-icon admin-heading-icon" aria-hidden="true">
+              <img src="/icone-presente.png" alt="" />
+            </span>
             <div>
               <h2>{idEmEdicao ? "Editar presente" : "Novo presente"}</h2>
               <p>A foto é opcional e pode ser adicionada por URL.</p>
@@ -250,7 +252,9 @@ function CadastroPresente() {
                   {presente.fotoUrl ? (
                     <img src={presente.fotoUrl} alt="" />
                   ) : (
-                    <span aria-hidden="true" />
+                    <span className="image-icon admin-present-placeholder" aria-hidden="true">
+                      <img src="/icone-presente.png" alt="" />
+                    </span>
                   )}
                 </div>
                 <div className="admin-present-info">

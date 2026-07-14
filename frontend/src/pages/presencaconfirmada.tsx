@@ -13,7 +13,9 @@ function PresencaConfirmada() {
     <div className="invite-page confirmed-page">
       <main className="invite-shell is-confirmed-layout">
         <section className="success-card" role="status">
-          <span className="success-icon" aria-hidden="true" />
+          <span className="image-icon success-icon" aria-hidden="true">
+            <img src="/icone-estrela.png" alt="" />
+          </span>
           <h2>Obrigado, {presencaSalva.nome}!</h2>
           <p>
             {presencaSalva.mensagem ??

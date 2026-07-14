@@ -25,60 +25,15 @@ type PropriedadesCartao = {
   className?: string;
 };
 
-function IconePresente() {
-  return (
-    <svg
-      className="action-icon action-svg"
-      viewBox="0 0 96 96"
-      aria-hidden="true"
-      focusable="false"
-    >
-      <defs>
-        <linearGradient id="gift-action-fill" x1="18" x2="78" y1="16" y2="84">
-          <stop stopColor="#ffffff" />
-          <stop offset="1" stopColor="#d7dde5" />
-        </linearGradient>
-      </defs>
-      <path
-        d="M22 39h52a5 5 0 0 1 5 5v33a5 5 0 0 1-5 5H22a5 5 0 0 1-5-5V44a5 5 0 0 1 5-5z"
-        fill="url(#gift-action-fill)"
-      />
-      <path d="M14 31h68a4 4 0 0 1 4 4v11H10V35a4 4 0 0 1 4-4z" fill="#f6f7f9" />
-      <path d="M43 31h10v51H43z" fill="#061b3a" />
-      <path d="M48 48c7-11 27-8 27 6 0 10-12 18-27 30-15-12-27-20-27-30 0-14 20-17 27-6z" fill="#061b3a" />
-      <path
-        d="M47 30C33 29 23 22 23 14c0-6 5-10 11-8 8 2 12 11 14 24zM49 30c14-1 24-8 24-16 0-6-5-10-11-8-8 2-12 11-13 24z"
-        fill="none"
-        stroke="#f6f7f9"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="7"
-      />
-    </svg>
-  );
-}
+type PropriedadesIconeImagem = {
+  src: string;
+};
 
-function IconeMapa() {
+function IconeImagem({ src }: PropriedadesIconeImagem) {
   return (
-    <svg
-      className="action-icon action-svg"
-      viewBox="0 0 96 96"
-      aria-hidden="true"
-      focusable="false"
-    >
-      <defs>
-        <linearGradient id="map-action-fill" x1="24" x2="72" y1="10" y2="86">
-          <stop stopColor="#ffffff" />
-          <stop offset="1" stopColor="#d7dde5" />
-        </linearGradient>
-      </defs>
-      <path
-        d="M48 7c19 0 34 15 34 34 0 24-34 50-34 50S14 65 14 41C14 22 29 7 48 7z"
-        fill="url(#map-action-fill)"
-      />
-      <circle cx="48" cy="40" r="12" fill="#061b3a" />
-      <circle cx="48" cy="40" r="5" fill="#f7f8fa" opacity="0.22" />
-    </svg>
+    <span className="image-icon action-icon" aria-hidden="true">
+      <img src={src} alt="" />
+    </span>
   );
 }
 
@@ -106,7 +61,7 @@ export function AcoesConfirmacao({ className = "" }: PropriedadesAcoes) {
     <div className={`confirmation-actions ${className}`.trim()}>
       <a className="gift-link" href="/presentes">
         <span className="action-ornament" aria-hidden="true" />
-        <IconePresente />
+        <IconeImagem src="/icone-presente.png" />
         <strong>Sugestão de presentes</strong>
         <span className="action-divider" aria-hidden="true" />
         <small>Clique para ver nossas sugestões</small>
@@ -118,7 +73,7 @@ export function AcoesConfirmacao({ className = "" }: PropriedadesAcoes) {
         rel="noopener noreferrer"
       >
         <span className="action-ornament" aria-hidden="true" />
-        <IconeMapa />
+        <IconeImagem src="/icone-localizacao.png" />
         <strong>Local do evento</strong>
         <span className="action-divider" aria-hidden="true" />
         <small>Clique para abrir o mapa e ver o endereço</small>
