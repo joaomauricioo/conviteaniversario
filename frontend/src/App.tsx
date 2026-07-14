@@ -52,7 +52,10 @@ function App() {
   }
   if (caminho === "/presentes") return <Presentes />;
   if (caminho === "/confirmar-presenca") return <Inicio permitirAtualizacao />;
-  if (caminho === "/prensencaconfirmada") return <PresencaConfirmada />;
+  if (caminho === "/prensencaconfirmada") {
+    window.history.replaceState(null, "", "/presencaconfirmada");
+    return <PresencaConfirmada />;
+  }
   if (caminho === "/presencaconfirmada") return <PresencaConfirmada />;
   if (caminho === "/presencanaoconfirmada") return <PresencaNaoConfirmada />;
 

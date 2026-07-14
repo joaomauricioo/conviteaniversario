@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { pedirApiAdmin, sairAdmin } from "../lib/admin";
 import { formatarCelular } from "../lib/presenca";
 
@@ -17,7 +17,17 @@ type DadosRelatorio = {
   convidados: Convidado[];
 };
 
+type FiltroPresenca = "todos" | "confirmados" | "nao-confirmados";
+
 const nomeArquivoRelatorio = "relatorio-presenca";
+
+function normalizarBusca(texto: string) {
+  return texto
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
 
 function formatarData(data: string) {
   return new Intl.DateTimeFormat("pt-BR", {
@@ -60,6 +70,30 @@ function Relatorio() {
   const [dados, setDados] = useState<DadosRelatorio | null>(null);
   const [erro, setErro] = useState("");
   const [mensagemExportacao, setMensagemExportacao] = useState("");
+  const [busca, setBusca] = useState("");
+  const [filtroPresenca, setFiltroPresenca] = useState<FiltroPresenca>("todos");
+
+  const convidadosFiltrados = useMemo(() => {
+    if (!dados) return [];
+
+    const termoBusca = normalizarBusca(busca);
+
+    return dados.convidados.filter((convidado) => {
+      const passaNoFiltro =
+        filtroPresenca === "todos" ||
+        (filtroPresenca === "confirmados" && convidado.presenca) ||
+        (filtroPresenca === "nao-confirmados" && !convidado.presenca);
+
+      if (!passaNoFiltro) return false;
+      if (!termoBusca) return true;
+
+      const textoConvidado = normalizarBusca(
+        `${convidado.nome} ${convidado.celular} ${formatarCelular(convidado.celular)}`,
+      );
+
+      return textoConvidado.includes(termoBusca);
+    });
+  }, [busca, dados, filtroPresenca]);
 
   useEffect(() => {
     pedirApiAdmin<DadosRelatorio>("/relatorio")
@@ -73,8 +107,8 @@ function Relatorio() {
       });
   }, []);
 
-  function dadosPodemSerExportados() {
-    if (!dados || dados.convidados.length === 0) {
+  function dadosPodemSerExportados(convidados: Convidado[]) {
+    if (convidados.length === 0) {
       setMensagemExportacao("Não há dados para exportar.");
       return false;
     }
@@ -84,9 +118,9 @@ function Relatorio() {
   }
 
   async function exportarExcel() {
-    if (!dadosPodemSerExportados() || !dados) return;
+    if (!dadosPodemSerExportados(convidadosFiltrados)) return;
 
-    const linhas = montarLinhasRelatorio(dados.convidados);
+    const linhas = montarLinhasRelatorio(convidadosFiltrados);
     const cabecalho = ["Nome", "Celular", "Presença", "Data de confirmação"];
     const conteudoCabecalho = cabecalho
       .map((titulo) => `<th>${limparTextoParaArquivo(titulo)}</th>`)
@@ -111,7 +145,7 @@ function Relatorio() {
   }
 
   async function exportarPdf() {
-    if (!dadosPodemSerExportados() || !dados) return;
+    if (!dados || !dadosPodemSerExportados(convidadosFiltrados)) return;
 
     const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
       import("jspdf"),
@@ -137,7 +171,7 @@ function Relatorio() {
     autoTable(documento, {
       startY: 42,
       head: [["Nome", "Celular", "Presença", "Data de confirmação"]],
-      body: montarLinhasRelatorio(dados.convidados).map((linha) => [
+      body: montarLinhasRelatorio(convidadosFiltrados).map((linha) => [
         linha.Nome,
         linha.Celular,
         linha["Presença"],
@@ -228,11 +262,52 @@ function Relatorio() {
             <section className="report-table-card">
               <div className="report-table-heading">
                 <h2>Respostas</h2>
-                <span>{dados.totalGeral} registro(s)</span>
+                <span>
+                  {convidadosFiltrados.length} de {dados.totalGeral} registro(s)
+                </span>
+              </div>
+
+              <div className="report-filters">
+                <label>
+                  <span>Buscar</span>
+                  <input
+                    type="search"
+                    value={busca}
+                    placeholder="Nome ou celular"
+                    onChange={(evento) => setBusca(evento.target.value)}
+                  />
+                </label>
+                <div className="report-filter-group" aria-label="Filtrar por presença">
+                  <button
+                    className={filtroPresenca === "todos" ? "is-active" : ""}
+                    type="button"
+                    onClick={() => setFiltroPresenca("todos")}
+                  >
+                    Todos
+                  </button>
+                  <button
+                    className={filtroPresenca === "confirmados" ? "is-active" : ""}
+                    type="button"
+                    onClick={() => setFiltroPresenca("confirmados")}
+                  >
+                    Confirmados
+                  </button>
+                  <button
+                    className={
+                      filtroPresenca === "nao-confirmados" ? "is-active" : ""
+                    }
+                    type="button"
+                    onClick={() => setFiltroPresenca("nao-confirmados")}
+                  >
+                    Não confirmados
+                  </button>
+                </div>
               </div>
 
               {dados.convidados.length === 0 ? (
                 <p className="report-empty">Nenhuma confirmação recebida ainda.</p>
+              ) : convidadosFiltrados.length === 0 ? (
+                <p className="report-empty">Nenhum registro encontrado.</p>
               ) : (
                 <div className="report-table-wrap">
                   <table>
@@ -245,7 +320,7 @@ function Relatorio() {
                       </tr>
                     </thead>
                     <tbody>
-                      {dados.convidados.map((convidado) => (
+                      {convidadosFiltrados.map((convidado) => (
                         <tr key={convidado.celular}>
                           <td>{convidado.nome}</td>
                           <td>{formatarCelular(convidado.celular)}</td>
