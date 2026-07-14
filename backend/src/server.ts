@@ -1,11 +1,14 @@
 import "dotenv/config";
 import { app } from "./app";
+import { env } from "./lib/env";
 import { prisma } from "./lib/prisma";
 
-const porta = Number(process.env.PORT) || 3000;
+const porta = env.port;
 
 const servidor = app.listen(porta, () => {
-  console.log(`API disponível em http://localhost:${porta}`);
+  if (!env.isProduction) {
+    console.log(`API disponivel em http://localhost:${porta}`);
+  }
 });
 
 async function desligarServidor() {

@@ -50,6 +50,11 @@ Preencha `frontend/.env` com a URL da API quando ela nao estiver no mesmo domini
 - Senhas de administradores devem ser armazenadas somente com hash bcrypt.
 - Rotas administrativas sao protegidas no backend por sessao httpOnly e CSRF.
 - Configure `FRONTEND_URL` apenas com os dominios autorizados.
+- Configure `ADMIN_SESSION_SECRET` com pelo menos 32 caracteres aleatorios.
+- Configure os limites `LOGIN_RATE_LIMIT_*`, `PUBLIC_RATE_LIMIT_*` e
+  `ADMIN_RATE_LIMIT_*` conforme o trafego esperado.
+- URLs de fotos de presentes devem usar HTTPS.
+- Aplique as migrations antes do deploy para manter constraints e indices do banco.
 
 ## Scripts Uteis
 

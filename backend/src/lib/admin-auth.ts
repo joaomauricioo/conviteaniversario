@@ -3,11 +3,14 @@ import bcrypt from "bcryptjs";
 import rateLimit from "express-rate-limit";
 import type { Request, RequestHandler, Response } from "express";
 import { z } from "zod";
+import { env } from "./env";
 import { prisma } from "./prisma";
 
-const COOKIE_SESSAO_ADMIN = "admin_session";
+const COOKIE_SESSAO_ADMIN = env.isProduction
+  ? "__Host-admin_session"
+  : "admin_session";
+const COOKIE_SESSAO_ADMIN_LEGADO = "admin_session";
 const TAMANHO_MINIMO_SEGREDO = 32;
-const HORAS_SESSAO_PADRAO = 8;
 const HASH_COMPARACAO_FALSA = bcrypt.hashSync("senha-invalida-para-comparacao", 12);
 const MENSAGEM_CREDENCIAIS_INVALIDAS = "Usuário ou senha inválidos.";
 
@@ -28,24 +31,26 @@ type SessaoAdmin = {
   csrfToken: string;
 };
 
-const loginSchema = z.object({
-  usuarioOuEmail: z
-    .string({ error: "Informe o usuário ou e-mail." })
-    .trim()
-    .min(1, "Informe o usuário ou e-mail.")
-    .max(254, "Usuário ou e-mail inválido."),
-  senha: z
-    .string({ error: "Informe a senha." })
-    .min(1, "Informe a senha.")
-    .max(200, "Senha inválida."),
-});
+const loginSchema = z
+  .object({
+    usuarioOuEmail: z
+      .string({ error: "Informe o usuário ou e-mail." })
+      .trim()
+      .min(1, "Informe o usuário ou e-mail.")
+      .max(254, "Usuário ou e-mail inválido."),
+    senha: z
+      .string({ error: "Informe a senha." })
+      .min(1, "Informe a senha.")
+      .max(200, "Senha inválida."),
+  })
+  .strict();
 
 function ambienteProducao() {
-  return process.env.NODE_ENV === "production";
+  return env.isProduction;
 }
 
 function buscarSegredoSessao() {
-  const segredo = process.env.ADMIN_SESSION_SECRET;
+  const segredo = env.adminSessionSecret;
 
   if (!segredo || segredo.length < TAMANHO_MINIMO_SEGREDO) {
     throw new Error(
@@ -57,13 +62,7 @@ function buscarSegredoSessao() {
 }
 
 function buscarDuracaoSessaoMs() {
-  const horasConfiguradas = Number(process.env.ADMIN_SESSION_TTL_HOURS);
-  const horas =
-    Number.isFinite(horasConfiguradas) && horasConfiguradas > 0
-      ? horasConfiguradas
-      : HORAS_SESSAO_PADRAO;
-
-  return horas * 60 * 60 * 1000;
+  return env.adminSessionTtlHours * 60 * 60 * 1000;
 }
 
 function assinar(valor: string) {
@@ -116,7 +115,11 @@ function lerCookie(pedido: Request, nome: string) {
   const cookie = cookies.find((item) => item.startsWith(prefixo));
   if (!cookie) return null;
 
-  return decodeURIComponent(cookie.slice(prefixo.length));
+  try {
+    return decodeURIComponent(cookie.slice(prefixo.length));
+  } catch {
+    return null;
+  }
 }
 
 function configurarCookieSessao(resposta: Response, token: string) {
@@ -136,6 +139,15 @@ function limparCookieSessao(resposta: Response) {
     sameSite: "lax",
     path: "/",
   });
+
+  if (COOKIE_SESSAO_ADMIN !== COOKIE_SESSAO_ADMIN_LEGADO) {
+    resposta.clearCookie(COOKIE_SESSAO_ADMIN_LEGADO, {
+      httpOnly: true,
+      secure: ambienteProducao(),
+      sameSite: "lax",
+      path: "/",
+    });
+  }
 }
 
 function criarTokenSessao(adminId: string) {
@@ -155,8 +167,8 @@ function buscarSessaoResposta(resposta: Response): SessaoAdmin | undefined {
 }
 
 export const limitarTentativasLogin = rateLimit({
-  windowMs: Number(process.env.LOGIN_RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000,
-  limit: Number(process.env.LOGIN_RATE_LIMIT_MAX) || 5,
+  windowMs: env.loginRateLimitWindowMs,
+  limit: env.loginRateLimitMax,
   standardHeaders: true,
   legacyHeaders: false,
   message: { mensagem: MENSAGEM_CREDENCIAIS_INVALIDAS },
@@ -168,7 +180,11 @@ export const exigirAdminAutenticado: RequestHandler = async (
   proximo,
 ) => {
   try {
-    const payload = decodificarSessao(lerCookie(pedido, COOKIE_SESSAO_ADMIN) ?? undefined);
+    const tokenSessao =
+      lerCookie(pedido, COOKIE_SESSAO_ADMIN) ??
+      lerCookie(pedido, COOKIE_SESSAO_ADMIN_LEGADO) ??
+      undefined;
+    const payload = decodificarSessao(tokenSessao);
 
     if (!payload) {
       responderNaoAutenticado(resposta);

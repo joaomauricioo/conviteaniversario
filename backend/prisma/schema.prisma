@@ -15,6 +15,8 @@ model Convidado {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([presenca])
+  @@index([updatedAt])
   @@map("convidados")
 }
 
@@ -25,6 +27,7 @@ model Presente {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([createdAt])
   @@map("presentes")
 }
 
@@ -37,5 +40,6 @@ model Administrador {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([ativo])
   @@map("administradores")
 }

@@ -1,14 +1,9 @@
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../generated/prisma/client";
+import { env, validarAmbienteObrigatorio } from "./env";
 
-const enderecoBanco = process.env.DATABASE_URL;
+validarAmbienteObrigatorio();
 
-if (!enderecoBanco) {
-  throw new Error(
-    "DATABASE_URL não foi definida. Copie .env.example para .env e configure o PostgreSQL.",
-  );
-}
-
-const adaptador = new PrismaPg({ connectionString: enderecoBanco });
+const adaptador = new PrismaPg({ connectionString: env.databaseUrl! });
 
 export const prisma = new PrismaClient({ adapter: adaptador });

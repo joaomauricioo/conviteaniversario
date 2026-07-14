@@ -16,7 +16,7 @@ function urlImagemSegura(fotoUrl: string | null) {
 
   try {
     const url = new URL(fotoUrl);
-    return url.protocol === "http:" || url.protocol === "https:";
+    return url.protocol === "https:";
   } catch {
     return false;
   }

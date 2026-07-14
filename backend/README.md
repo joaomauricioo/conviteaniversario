@@ -26,9 +26,16 @@ ADMIN_SESSION_SECRET=
 ADMIN_SESSION_TTL_HOURS=
 LOGIN_RATE_LIMIT_WINDOW_MS=
 LOGIN_RATE_LIMIT_MAX=
+PUBLIC_RATE_LIMIT_WINDOW_MS=
+PUBLIC_RATE_LIMIT_MAX=
+ADMIN_RATE_LIMIT_WINDOW_MS=
+ADMIN_RATE_LIMIT_MAX=
 ```
 
 `ADMIN_SESSION_SECRET` deve ter pelo menos 32 caracteres.
+Em producao, configure `FRONTEND_URL` com o dominio publico exato do frontend
+sem barra final, por exemplo `https://seudominio.com.br`. Use virgulas apenas se
+houver mais de um dominio autorizado.
 
 ## Endpoints
 
@@ -37,10 +44,14 @@ LOGIN_RATE_LIMIT_MAX=
 - `POST /admin/login`: autentica o administrador.
 - `GET /admin/sessao`: verifica a sessao administrativa.
 - `POST /admin/logout`: encerra a sessao administrativa.
+- `GET /admin/presentes`: administrativo; lista presentes com metadados internos.
 - `GET /relatorio`: administrativo; retorna totais e convidados.
 - `POST /presentes`: administrativo; cadastra presente.
 - `PUT /presentes/:id`: administrativo; atualiza presente.
 - `DELETE /presentes/:id`: administrativo; remove presente.
+
+Rotas com corpo exigem `Content-Type: application/json`. Rotas administrativas
+usam cookie httpOnly assinado, token CSRF e rate limiting.
 
 ## Administrador
 

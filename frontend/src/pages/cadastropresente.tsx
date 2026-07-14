@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { pedirApiAdmin, sairAdmin } from "../lib/admin";
-import { pedirApi } from "../lib/api";
 
 type Presente = {
   id: string;
@@ -28,7 +27,7 @@ function CadastroPresente() {
   const [sucesso, setSucesso] = useState("");
 
   async function buscarPresentes() {
-    const resposta = await pedirApi<RespostaPresentes>("/presentes");
+    const resposta = await pedirApiAdmin<RespostaPresentes>("/admin/presentes");
     return resposta.presentes;
   }
 
