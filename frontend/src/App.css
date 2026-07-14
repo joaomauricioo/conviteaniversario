@@ -186,6 +186,19 @@ a {
   box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.12), 0 0 22px rgba(255, 255, 255, 0.2);
 }
 
+.form input[readonly] {
+  border-color: rgba(230, 235, 240, 0.18);
+  background: rgba(255, 255, 255, 0.04);
+  color: #d9dee3;
+  cursor: default;
+}
+
+.form input[readonly]:focus {
+  border-color: rgba(230, 235, 240, 0.18);
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: none;
+}
+
 .radio-group {
   display: grid;
   grid-template-columns: 1fr 1fr;

@@ -83,6 +83,7 @@ export function AcoesConfirmacao({ className = "" }: PropriedadesAcoes) {
 }
 
 function Formulario({ onConfirmacaoChange, presencaInicial }: PropriedadesFormulario) {
+  const camposIdentificacaoSomenteLeitura = Boolean(presencaInicial);
   const [nome, setNome] = useState(presencaInicial?.nome ?? "");
   const [celular, setCelular] = useState(
     presencaInicial ? formatarCelular(presencaInicial.celular) : "",
@@ -156,6 +157,7 @@ function Formulario({ onConfirmacaoChange, presencaInicial }: PropriedadesFormul
           placeholder="Digite seu nome"
           value={nome}
           onChange={(event) => setNome(event.target.value)}
+          readOnly={camposIdentificacaoSomenteLeitura}
           maxLength={100}
           required
         />
@@ -168,6 +170,7 @@ function Formulario({ onConfirmacaoChange, presencaInicial }: PropriedadesFormul
           placeholder="(27) 99999-9999"
           value={celular}
           onChange={(event) => setCelular(formatarCelular(event.target.value))}
+          readOnly={camposIdentificacaoSomenteLeitura}
           maxLength={15}
           required
         />
