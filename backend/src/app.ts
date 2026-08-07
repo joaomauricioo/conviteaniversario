@@ -115,6 +115,20 @@ const editarPresenteSchema = presenteSchema
     message: "Informe ao menos um campo para atualizar.",
   });
 
+const moverPresenteSchema = z
+  .object({
+    direcao: z.enum(["subir", "descer"]),
+  })
+  .strict();
+
+const reordenarPresentesSchema = z
+  .object({
+    ids: z
+      .array(z.string().uuid("O identificador do presente é inválido."))
+      .min(1, "Informe ao menos um presente."),
+  })
+  .strict();
+
 const editarListaConvidadoSchema = listaConvidadoSchema
   .partial()
   .refine((dados) => dados.nome !== undefined || dados.identificacao !== undefined, {
@@ -240,7 +254,7 @@ const listarPresentesPublicos: RequestHandler = async (_pedido, resposta, proxim
         nome: true,
         fotoUrl: true,
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: [{ ordem: "asc" }, { createdAt: "desc" }],
     });
 
     resposta.json({ presentes });
@@ -260,9 +274,10 @@ const listarPresentesAdministrativos: RequestHandler = async (
         id: true,
         nome: true,
         fotoUrl: true,
+        ordem: true,
         createdAt: true,
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: [{ ordem: "asc" }, { createdAt: "desc" }],
     });
 
     resposta.json({ presentes });
@@ -281,10 +296,16 @@ const salvarPresente: RequestHandler = async (pedido, resposta, proximo) => {
     }
 
     const dados = resultado.data;
+    const menorOrdem = await prisma.presente.aggregate({
+      _min: { ordem: true },
+    });
+    const novaOrdem =
+      menorOrdem._min.ordem === null ? 0 : menorOrdem._min.ordem - 1;
     const presente = await prisma.presente.create({
       data: {
         nome: dados.nome,
         fotoUrl: dados.fotoUrl,
+        ordem: novaOrdem,
       },
     });
 
@@ -330,6 +351,131 @@ const atualizarPresente: RequestHandler = async (pedido, resposta, proximo) => {
     resposta.json({
       mensagem: "Presente atualizado com sucesso!",
       presente,
+    });
+  } catch (erro) {
+    proximo(erro);
+  }
+};
+
+const moverPresente: RequestHandler = async (pedido, resposta, proximo) => {
+  try {
+    const resultadoId = presenteIdSchema.safeParse(pedido.params.id);
+    const resultado = moverPresenteSchema.safeParse(pedido.body);
+
+    if (!resultadoId.success) {
+      resposta.status(400).json({ mensagem: resultadoId.error.issues[0]?.message });
+      return;
+    }
+
+    if (!resultado.success) {
+      resposta.status(400).json(erroDeValidacao(resultado.error));
+      return;
+    }
+
+    const movimento = await prisma.$transaction(async (transacao) => {
+      const presenteAtual = await transacao.presente.findUnique({
+        where: { id: resultadoId.data },
+        select: { id: true, ordem: true },
+      });
+
+      if (!presenteAtual) {
+        return "nao-encontrado" as const;
+      }
+
+      const vizinho = await transacao.presente.findFirst({
+        where:
+          resultado.data.direcao === "subir"
+            ? { ordem: { lt: presenteAtual.ordem } }
+            : { ordem: { gt: presenteAtual.ordem } },
+        select: { id: true, ordem: true },
+        orderBy:
+          resultado.data.direcao === "subir"
+            ? { ordem: "desc" }
+            : { ordem: "asc" },
+      });
+
+      if (!vizinho) {
+        return "limite" as const;
+      }
+
+      await transacao.presente.update({
+        where: { id: presenteAtual.id },
+        data: { ordem: vizinho.ordem },
+      });
+
+      await transacao.presente.update({
+        where: { id: vizinho.id },
+        data: { ordem: presenteAtual.ordem },
+      });
+
+      return "movido" as const;
+    });
+
+    if (movimento === "nao-encontrado") {
+      resposta.status(404).json({ mensagem: "Presente não encontrado." });
+      return;
+    }
+
+    if (movimento === "limite") {
+      resposta.status(409).json({
+        mensagem: "Não há mais itens para mover nessa direção.",
+      });
+      return;
+    }
+
+    resposta.json({
+      mensagem: "Ordem do presente atualizada com sucesso!",
+    });
+  } catch (erro) {
+    proximo(erro);
+  }
+};
+
+const reordenarPresentes: RequestHandler = async (pedido, resposta, proximo) => {
+  try {
+    const resultado = reordenarPresentesSchema.safeParse(pedido.body);
+
+    if (!resultado.success) {
+      resposta.status(400).json(erroDeValidacao(resultado.error));
+      return;
+    }
+
+    const idsUnicos = new Set(resultado.data.ids);
+    if (idsUnicos.size !== resultado.data.ids.length) {
+      resposta.status(400).json({
+        mensagem: "A lista de presentes contém itens repetidos.",
+      });
+      return;
+    }
+
+    const presentesExistentes = await prisma.presente.findMany({
+      where: {
+        id: {
+          in: resultado.data.ids,
+        },
+      },
+      select: { id: true },
+    });
+
+    if (presentesExistentes.length !== resultado.data.ids.length) {
+      resposta.status(409).json({
+        mensagem:
+          "A ordem dos presentes não pôde ser atualizada. Atualize a página e tente novamente.",
+      });
+      return;
+    }
+
+    await prisma.$transaction(
+      resultado.data.ids.map((id, indice) =>
+        prisma.presente.update({
+          where: { id },
+          data: { ordem: indice + 1 },
+        }),
+      ),
+    );
+
+    resposta.json({
+      mensagem: "Ordem dos presentes atualizada com sucesso!",
     });
   } catch (erro) {
     proximo(erro);
@@ -708,6 +854,9 @@ app.get("/presentes", limitarRotasPublicas, listarPresentesPublicos);
 app.get("/admin/presentes", limitarRotasAdministrativas, exigirAdminAutenticado, listarPresentesAdministrativos);
 app.post("/presentes", limitarRotasAdministrativas, exigirAdminAutenticado, exigirCsrfAdmin, exigirJson, salvarPresente);
 app.post("/admin/presentes", limitarRotasAdministrativas, exigirAdminAutenticado, exigirCsrfAdmin, exigirJson, salvarPresente);
+app.post("/presentes/:id/mover", limitarRotasAdministrativas, exigirAdminAutenticado, exigirCsrfAdmin, exigirJson, moverPresente);
+app.post("/admin/presentes/:id/mover", limitarRotasAdministrativas, exigirAdminAutenticado, exigirCsrfAdmin, exigirJson, moverPresente);
+app.put("/admin/presentes/ordem", limitarRotasAdministrativas, exigirAdminAutenticado, exigirCsrfAdmin, exigirJson, reordenarPresentes);
 app.put("/presentes/:id", limitarRotasAdministrativas, exigirAdminAutenticado, exigirCsrfAdmin, exigirJson, atualizarPresente);
 app.put("/admin/presentes/:id", limitarRotasAdministrativas, exigirAdminAutenticado, exigirCsrfAdmin, exigirJson, atualizarPresente);
 app.delete("/presentes/:id", limitarRotasAdministrativas, exigirAdminAutenticado, exigirCsrfAdmin, excluirPresente);

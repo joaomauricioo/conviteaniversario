@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { pedirApi } from "../lib/api";
 import {
   celularValido,
@@ -87,11 +87,9 @@ export function AcoesConfirmacao({ className = "" }: PropriedadesAcoes) {
 function Formulario({
   onConfirmacaoChange,
   presencaInicial,
-  permitirEdicaoLivre = false,
 }: PropriedadesFormulario) {
-  const camposIdentificacaoSomenteLeitura =
-    Boolean(presencaInicial) && !permitirEdicaoLivre;
   const celularRef = useRef<HTMLInputElement | null>(null);
+  const celularConfirmacaoRef = useRef<HTMLInputElement | null>(null);
   const [nome, setNome] = useState(presencaInicial?.nome ?? "");
   const [celular, setCelular] = useState(
     presencaInicial ? formatarCelular(presencaInicial.celular) : "",
@@ -100,9 +98,15 @@ function Formulario({
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState("");
   const [mostrarConfirmacaoNumero, setMostrarConfirmacaoNumero] = useState(false);
-  const [permitirEdicaoIdentificacao, setPermitirEdicaoIdentificacao] = useState(
-    !camposIdentificacaoSomenteLeitura,
-  );
+
+  useEffect(() => {
+    if (!mostrarConfirmacaoNumero) return;
+
+    window.requestAnimationFrame(() => {
+      celularConfirmacaoRef.current?.focus();
+      celularConfirmacaoRef.current?.select();
+    });
+  }, [mostrarConfirmacaoNumero]);
 
   async function enviarConfirmacao(ignorarConfirmacaoNumero = false) {
     if (!nome.trim() || !celular.trim() || !presenca) {
@@ -182,9 +186,7 @@ function Formulario({
           onChange={(event) => {
             setNome(event.target.value);
             setMostrarConfirmacaoNumero(false);
-            setPermitirEdicaoIdentificacao(true);
           }}
-          readOnly={camposIdentificacaoSomenteLeitura && !permitirEdicaoIdentificacao}
           maxLength={100}
           required
         />
@@ -200,9 +202,7 @@ function Formulario({
           onChange={(event) => {
             setCelular(formatarCelular(event.target.value));
             setMostrarConfirmacaoNumero(false);
-            setPermitirEdicaoIdentificacao(true);
           }}
-          readOnly={camposIdentificacaoSomenteLeitura && !permitirEdicaoIdentificacao}
           maxLength={15}
           required
         />
@@ -258,33 +258,29 @@ function Formulario({
           >
             <div className="presence-check-panel">
               <h3 id="presence-check-title">Confira o número informado</h3>
-              <p>
-                Antes de validarmos sua presença, confira se o número ou a
-                identificação está correto. Se estiver, vamos verificar na lista de
-                convidados.
-              </p>
+              <label className="presence-check-field" htmlFor="celular-confirmacao">
+                <span className="sr-only">Número</span>
+                <input
+                  id="celular-confirmacao"
+                  ref={celularConfirmacaoRef}
+                  type="tel"
+                  inputMode="tel"
+                  value={celular}
+                  onChange={(event) => {
+                    setCelular(formatarCelular(event.target.value));
+                  }}
+                  maxLength={15}
+                  aria-label="Número"
+                />
+              </label>
               <div className="presence-check-actions">
                 <button
                   type="button"
-                  className="presence-check-secondary"
-                  onClick={() => {
-                    setMostrarConfirmacaoNumero(false);
-                    setPermitirEdicaoIdentificacao(true);
-                    window.requestAnimationFrame(() => {
-                      celularRef.current?.focus();
-                      celularRef.current?.select();
-                    });
-                  }}
-                  disabled={carregando}
-                >
-                  Corrigir número
-                </button>
-                <button
-                  type="button"
+                  className="presence-check-primary"
                   onClick={() => void enviarConfirmacao(true)}
                   disabled={carregando}
                 >
-                  Número correto
+                  Confirmar
                 </button>
               </div>
             </div>

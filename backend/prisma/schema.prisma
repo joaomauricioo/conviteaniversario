@@ -24,10 +24,12 @@ model Presente {
   id        String   @id @default(uuid()) @db.Uuid
   nome      String
   fotoUrl   String?
+  ordem     Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([createdAt])
+  @@index([ordem])
   @@map("presentes")
 }
 

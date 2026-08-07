@@ -25,19 +25,12 @@ function urlImagemSegura(fotoUrl: string | null) {
 function Presentes() {
   const [presentes, setPresentes] = useState<Presente[]>([]);
   const [carregando, setCarregando] = useState(true);
-  const [erro, setErro] = useState("");
   const [imagensComErro, setImagensComErro] = useState<string[]>([]);
 
   useEffect(() => {
     pedirApi<RespostaPresentes>("/presentes")
       .then((resposta) => setPresentes(resposta.presentes))
-      .catch((erroAtual: unknown) => {
-        setErro(
-          erroAtual instanceof Error
-            ? erroAtual.message
-            : "Não foi possível carregar as sugestões de presentes.",
-        );
-      })
+      .catch(() => setPresentes([]))
       .finally(() => setCarregando(false));
   }, []);
 
@@ -50,45 +43,45 @@ function Presentes() {
         </header>
 
         {carregando && <div className="presents-feedback">Carregando sugestões...</div>}
-        {erro && (
-          <div className="presents-feedback is-error" role="alert">
-            {erro}
-          </div>
-        )}
-        {!carregando && !erro && presentes.length === 0 && (
+        {!carregando && presentes.length === 0 && (
           <div className="presents-feedback">
-            Nenhuma sugestão foi cadastrada ainda.
+            Tem nada cadastrado ainda.
           </div>
         )}
 
-        {!carregando && !erro && presentes.length > 0 && (
-          <section className="presents-grid" aria-label="Sugestões de presentes">
+        {!carregando && presentes.length > 0 && (
+          <ul className="presents-list" aria-label="Sugestões de presentes">
             {presentes.map((presente) => {
               const mostrarFoto =
                 urlImagemSegura(presente.fotoUrl) &&
                 !imagensComErro.includes(presente.id);
 
               return (
-                <article
-                  className={`present-card ${
-                    mostrarFoto ? "" : "present-card-text-only"
+                <li
+                  className={`present-item ${
+                    mostrarFoto ? "" : "present-item-text-only"
                   }`.trim()}
                   key={presente.id}
                 >
                   {mostrarFoto && (
-                    <img
-                      src={presente.fotoUrl ?? ""}
-                      alt={presente.nome}
-                      onError={() =>
-                        setImagensComErro((ids) => [...ids, presente.id])
-                      }
-                    />
+                    <div className="present-item-media">
+                      <img
+                        src={presente.fotoUrl ?? ""}
+                        alt={presente.nome}
+                        onError={() =>
+                          setImagensComErro((ids) => [...ids, presente.id])
+                        }
+                      />
+                    </div>
                   )}
-                  <h2>{presente.nome}</h2>
-                </article>
+
+                  <div className="present-item-body">
+                    <h2>{presente.nome}</h2>
+                  </div>
+                </li>
               );
             })}
-          </section>
+          </ul>
         )}
 
         <a className="back-to-invite" href="/">

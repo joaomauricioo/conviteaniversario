@@ -8,6 +8,7 @@ type Presente = {
   id: string;
   nome: string;
   fotoUrl: string | null;
+  ordem: number;
   createdAt: string;
 };
 
@@ -144,6 +145,8 @@ function SecaoPresentes() {
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
   const [sucesso, setSucesso] = useState("");
+  const [idArrastando, setIdArrastando] = useState<string | null>(null);
+  const [idAlvo, setIdAlvo] = useState<string | null>(null);
 
   async function buscarPresentes() {
     const resposta = await pedirApiAdmin<RespostaPresentes>("/admin/presentes");
@@ -224,6 +227,115 @@ function SecaoPresentes() {
       );
     } finally {
       setSalvando(false);
+    }
+  }
+
+  function reposicionarPresentes(
+    lista: Presente[],
+    origemId: string,
+    destinoId: string,
+  ) {
+    const origemIndex = lista.findIndex((presente) => presente.id === origemId);
+    const destinoIndex = lista.findIndex((presente) => presente.id === destinoId);
+
+    if (origemIndex < 0 || destinoIndex < 0 || origemIndex === destinoIndex) {
+      return lista;
+    }
+
+    const novaLista = [...lista];
+    const [itemMovido] = novaLista.splice(origemIndex, 1);
+    const indiceDestinoAjustado = origemIndex < destinoIndex ? destinoIndex - 1 : destinoIndex;
+
+    novaLista.splice(indiceDestinoAjustado, 0, itemMovido);
+
+    return novaLista.map((presente, indice) => ({
+      ...presente,
+      ordem: indice + 1,
+    }));
+  }
+
+  function iniciarArraste(evento: React.DragEvent<HTMLElement>, presenteId: string) {
+    evento.dataTransfer.effectAllowed = "move";
+    evento.dataTransfer.setData("text/plain", presenteId);
+    setIdArrastando(presenteId);
+  }
+
+  function permitirArraste(evento: React.DragEvent<HTMLElement>, presenteId: string) {
+    evento.preventDefault();
+    evento.dataTransfer.dropEffect = "move";
+
+    if (idArrastando && idArrastando !== presenteId) {
+      setIdAlvo(presenteId);
+    }
+  }
+
+  function limparArraste() {
+    setIdArrastando(null);
+    setIdAlvo(null);
+  }
+
+  async function soltarArraste(evento: React.DragEvent<HTMLElement>, presenteId: string) {
+    evento.preventDefault();
+
+    const origemId = evento.dataTransfer.getData("text/plain") || idArrastando;
+    if (!origemId || origemId === presenteId) {
+      limparArraste();
+      return;
+    }
+
+    const novaLista = reposicionarPresentes(presentes, origemId, presenteId);
+    if (novaLista === presentes) {
+      limparArraste();
+      return;
+    }
+
+    setErro("");
+    setSucesso("");
+    setPresentes(novaLista);
+    limparArraste();
+
+    try {
+      const resposta = await pedirApiAdmin<RespostaMensagem>("/admin/presentes/ordem", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ids: novaLista.map((presente) => presente.id),
+        }),
+      });
+
+      setSucesso(resposta.mensagem);
+    } catch (erroAtual) {
+      setErro(
+        erroAtual instanceof Error
+          ? erroAtual.message
+          : "Não foi possível salvar a nova ordem dos presentes.",
+      );
+      await atualizarListaPresentes();
+    }
+  }
+
+  async function moverPresente(presenteId: string, direcao: "subir" | "descer") {
+    setErro("");
+    setSucesso("");
+
+    try {
+      const resposta = await pedirApiAdmin<RespostaMensagem>(
+        `/admin/presentes/${presenteId}/mover`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ direcao }),
+        },
+      );
+
+      setSucesso(resposta.mensagem);
+      await atualizarListaPresentes();
+    } catch (erroAtual) {
+      setErro(
+        erroAtual instanceof Error
+          ? erroAtual.message
+          : "Não foi possível alterar a ordem do presente.",
+      );
     }
   }
 
@@ -350,8 +462,23 @@ function SecaoPresentes() {
         )}
 
         <div className="present-admin-list">
-          {presentes.map((presente) => (
-            <article key={presente.id}>
+          {presentes.map((presente, indice) => (
+            <article
+              key={presente.id}
+              className={[
+                "present-admin-item",
+                idArrastando === presente.id ? "is-dragging" : "",
+                idAlvo === presente.id ? "is-drop-target" : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+              draggable
+              onDragStart={(evento) => iniciarArraste(evento, presente.id)}
+              onDragOver={(evento) => permitirArraste(evento, presente.id)}
+              onDragEnter={(evento) => permitirArraste(evento, presente.id)}
+              onDrop={(evento) => void soltarArraste(evento, presente.id)}
+              onDragEnd={limparArraste}
+            >
               <div className="admin-present-thumb">
                 {presente.fotoUrl ? (
                   <img src={presente.fotoUrl} alt="" />
@@ -366,6 +493,28 @@ function SecaoPresentes() {
                 <p>{presente.fotoUrl ? "Com foto" : "Sem foto"}</p>
               </div>
               <div className="admin-present-actions">
+                <div className="admin-present-order-controls" aria-label="Reordenar presente">
+                  <button
+                    className="button-order"
+                    type="button"
+                    disabled={indice === 0}
+                    onClick={() => void moverPresente(presente.id, "subir")}
+                    aria-label="Mover para cima"
+                    title="Mover para cima"
+                  >
+                    ↑
+                  </button>
+                  <button
+                    className="button-order"
+                    type="button"
+                    disabled={indice === presentes.length - 1}
+                    onClick={() => void moverPresente(presente.id, "descer")}
+                    aria-label="Mover para baixo"
+                    title="Mover para baixo"
+                  >
+                    ↓
+                  </button>
+                </div>
                 <button type="button" onClick={() => iniciarEdicao(presente)}>
                   Editar
                 </button>
@@ -437,7 +586,11 @@ function SecaoRelatorio() {
   }
 
   useEffect(() => {
-    void carregarRelatorio();
+    const atrasoCarregamento = window.setTimeout(() => {
+      void carregarRelatorio();
+    }, 0);
+
+    return () => window.clearTimeout(atrasoCarregamento);
   }, []);
 
   function iniciarEdicao(convidado: ConvidadoConfirmacao) {

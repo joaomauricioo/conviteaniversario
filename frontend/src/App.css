@@ -40,6 +40,29 @@ a {
   font-family: "Poppins", Arial, Helvetica, sans-serif;
 }
 
+.invite-page h1,
+.invite-page h2,
+.invite-page h3,
+.invite-page h4,
+.invite-page h5,
+.invite-page h6,
+.invite-page p,
+.invite-page span,
+.invite-page button,
+.invite-page a,
+.presents-page h1,
+.presents-page h2,
+.presents-page h3,
+.presents-page h4,
+.presents-page h5,
+.presents-page h6,
+.presents-page p,
+.presents-page span,
+.presents-page button,
+.presents-page a {
+  font-family: inherit;
+}
+
 .invite-page::after {
   content: "";
   position: absolute;
@@ -137,7 +160,7 @@ a {
 
 .invite-hero h1 {
   color: #f5f5f5;
-  font-family: "Playfair Display", Georgia, serif;
+  font-family: inherit;
   font-size: clamp(1.55rem, 3.4vw, 2.15rem);
   font-weight: 700;
   line-height: 1.1;
@@ -157,7 +180,7 @@ a {
   max-width: 480px;
   margin: 24px auto 0;
   color: #d8dde2;
-  font-family: "Playfair Display", Georgia, serif;
+  font-family: inherit;
   font-size: clamp(1.02rem, 2vw, 1.28rem);
   font-weight: 600;
   line-height: 1.45;
@@ -373,36 +396,54 @@ a {
 .presence-check-panel h3 {
   margin: 0 0 10px;
   color: #f5f5f5;
-  font-family: "Playfair Display", Georgia, serif;
+  font-family: inherit;
   font-size: clamp(1.08rem, 2.4vw, 1.35rem);
   line-height: 1.2;
 }
 
-.presence-check-panel p {
-  margin: 0;
-  color: #d7dde3;
-  font-size: 0.95rem;
-  font-weight: 500;
-  line-height: 1.55;
+.presence-check-field {
+  display: block;
+  margin-top: 8px;
+}
+
+.presence-check-field input {
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid rgba(230, 235, 240, 0.24);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  font: inherit;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 0 14px;
+  text-align: center;
+}
+
+.presence-check-field input:focus {
+  outline: none;
+  border-color: #ffffff;
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.12);
 }
 
 .presence-check-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  display: flex;
+  justify-content: center;
   margin-top: 18px;
 }
 
 .presence-check-actions button {
+  min-width: min(100%, 220px);
   min-height: 46px;
   margin-top: 0;
 }
 
-.presence-check-secondary {
-  border: 1px solid rgba(230, 235, 240, 0.18);
-  background: rgba(255, 255, 255, 0.08) !important;
-  color: #f8f8f8 !important;
-  box-shadow: none !important;
+.presence-check-primary {
+  border: 0;
+  background: linear-gradient(135deg, #f7f7f7, #aeb5bc 54%, #ffffff) !important;
+  color: #050505 !important;
+  box-shadow: 0 14px 35px rgba(255, 255, 255, 0.16) !important;
 }
 
 .success-card {
@@ -450,7 +491,7 @@ a {
 
 .success-card h2 {
   color: #ffffff;
-  font-family: "Playfair Display", Georgia, serif;
+  font-family: inherit;
   font-size: clamp(2.35rem, 5vw, 4rem);
   line-height: 1.05;
   text-shadow:
@@ -461,6 +502,7 @@ a {
 .success-card p {
   margin-top: 12px;
   color: #f0f0f0;
+  font-family: inherit;
   font-size: clamp(1rem, 2vw, 1.32rem);
   line-height: 1.35;
   text-shadow: 0 0 16px rgba(0, 0, 0, 0.55);
@@ -583,7 +625,7 @@ a {
 .gift-link strong {
   display: block;
   max-width: 230px;
-  font-family: "Playfair Display", Georgia, serif;
+  font-family: inherit;
   font-size: clamp(1.65rem, 2.6vw, 2.25rem);
   line-height: 1.16;
   text-wrap: balance;
@@ -712,7 +754,7 @@ a {
 
 .admin-loading-page p,
 .admin-login-card {
-  width: min(420px, 100%);
+  width: min(460px, 100%);
   border: 1px solid var(--app-line);
   border-radius: var(--app-radius);
   background: var(--app-panel);
@@ -733,7 +775,7 @@ a {
 
 .admin-login-card-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 14px;
   margin-bottom: 24px;
 }
@@ -776,11 +818,13 @@ a {
 
 .admin-login-card h1 {
   margin: 0;
-  padding-top: 1px;
+  padding-top: 0;
+  min-width: 0;
   color: var(--app-navy);
   font-family: "Playfair Display", Georgia, serif;
-  font-size: clamp(2rem, 6vw, 2.8rem);
-  line-height: 1.05;
+  font-size: clamp(1.85rem, 4.6vw, 2.3rem);
+  line-height: 1;
+  text-wrap: balance;
 }
 
 .admin-login-card form {
@@ -847,6 +891,21 @@ a {
   color: var(--app-danger);
   font-size: 0.92rem;
   padding: 10px 12px;
+}
+
+@media (max-width: 767px) {
+  .admin-login-card {
+    width: min(100%, 430px);
+  }
+
+  .admin-login-card-header {
+    align-items: flex-start;
+  }
+
+  .admin-login-card h1 {
+    font-size: clamp(1.65rem, 8.2vw, 2.05rem);
+    line-height: 1.02;
+  }
 }
 
 .admin-panel-layout {
@@ -1360,6 +1419,13 @@ a {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+  align-items: center;
+}
+
+.admin-present-order-controls {
+  display: inline-flex;
+  gap: 6px;
+  margin-right: 4px;
 }
 
 .present-admin-form-card button,
@@ -1378,6 +1444,22 @@ a {
   cursor: pointer;
   box-shadow: 0 12px 28px rgba(255, 255, 255, 0.12);
   transition: background 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+}
+
+.admin-present-actions .button-order {
+  min-width: 40px;
+  min-height: 40px;
+  padding: 0;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  letter-spacing: 0;
+}
+
+.admin-present-actions .button-order:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+  transform: none;
+  box-shadow: 0 8px 16px rgba(255, 255, 255, 0.06);
 }
 
 .present-admin-form-card button:hover,
@@ -1431,17 +1513,29 @@ a {
   display: grid;
 }
 
-.present-admin-list article {
+.present-admin-item {
   display: grid;
   grid-template-columns: 70px 1fr auto;
   align-items: center;
   gap: 16px;
   padding: 16px 22px;
   border-bottom: 1px solid var(--app-line);
+  cursor: grab;
+  user-select: none;
 }
 
-.present-admin-list article:last-child {
+.present-admin-item:last-child {
   border-bottom: 0;
+}
+
+.present-admin-item.is-dragging {
+  opacity: 0.6;
+  cursor: grabbing;
+}
+
+.present-admin-item.is-drop-target {
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 
 .admin-present-thumb {
@@ -1567,7 +1661,7 @@ a {
     padding: 34px 18px;
   }
 
-  .present-admin-list article {
+  .present-admin-item {
     grid-template-columns: 58px 1fr;
   }
 
@@ -1589,6 +1683,8 @@ a {
 
 .confirmed-page {
   overflow-x: hidden;
+  overflow-y: auto;
+  min-height: 100dvh;
 }
 
 .confirmed-page .is-confirmed-layout {
@@ -1740,7 +1836,7 @@ a {
 
 .declined-card h1 {
   color: var(--app-navy);
-  font-family: "Playfair Display", Georgia, serif;
+  font-family: inherit;
   font-size: clamp(2rem, 6vw, 3.4rem);
   line-height: 1.08;
   text-wrap: balance;
@@ -1749,6 +1845,7 @@ a {
 .declined-card p {
   max-width: 470px;
   color: var(--app-muted);
+  font-family: inherit;
   font-size: clamp(1rem, 2.4vw, 1.24rem);
   line-height: 1.5;
   text-wrap: balance;
@@ -1821,41 +1918,42 @@ a {
 .presents-shell {
   position: relative;
   z-index: 3;
-  width: min(1120px, calc(100% - 40px));
+  width: min(760px, calc(100% - 18px));
   margin: 0 auto;
-  padding: clamp(34px, 6vw, 72px) 0;
+  padding: clamp(18px, 3.5vw, 34px) 0 26px;
 }
 
 .presents-header {
-  margin-bottom: 22px;
+  margin-bottom: 12px;
   text-align: center;
-  text-shadow: 0 0 20px rgba(255, 255, 255, 0.22);
+  text-shadow: 0 0 18px rgba(255, 255, 255, 0.12);
 }
 
 .presents-header p {
-  margin-bottom: 8px;
-  color: var(--app-muted);
-  font-size: 0.78rem;
-  font-weight: 600;
-  letter-spacing: 0.16em;
+  margin-bottom: 7px;
+  color: rgba(198, 205, 213, 0.84);
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
 }
 
 .presents-header h1 {
   color: var(--app-navy);
-  font-family: "Playfair Display", Georgia, serif;
-  font-size: clamp(2.1rem, 6vw, 3.5rem);
-  line-height: 1.05;
+  font-family: inherit;
+  font-size: clamp(1.35rem, 3vw, 2rem);
+  line-height: 1.04;
+  text-wrap: balance;
 }
 
 .presents-feedback {
-  margin-bottom: 18px;
-  padding: 14px 16px;
+  margin-bottom: 12px;
+  padding: 10px 13px;
   border: 1px solid var(--app-line);
-  border-radius: var(--app-radius);
-  background: var(--app-panel);
-  box-shadow: var(--app-shadow);
-  backdrop-filter: blur(18px);
+  border-radius: 12px;
+  background: rgba(8, 10, 12, 0.7);
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(12px);
   color: var(--app-muted);
   text-align: center;
 }
@@ -1866,83 +1964,176 @@ a {
   color: var(--app-danger);
 }
 
-.presents-grid {
+.presents-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 18px;
+  gap: 8px;
 }
 
-.present-card {
+.present-item {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  min-height: 64px;
+  padding: 10px 12px;
   overflow: hidden;
-  border: 1px solid var(--app-line);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 14px;
-  background: var(--app-panel);
-  box-shadow: var(--app-shadow);
-  backdrop-filter: blur(18px);
-  transition: transform 180ms ease, box-shadow 180ms ease;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02)),
+    rgba(8, 10, 12, 0.68);
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.18);
+  backdrop-filter: blur(10px);
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    border-color 180ms ease;
 }
 
-.present-card:hover {
+.present-item:hover {
   transform: translateY(-2px);
-  box-shadow:
-    0 26px 70px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.22);
+  box-shadow: 0 16px 30px rgba(0, 0, 0, 0.24);
 }
 
-.present-card img {
+.present-item-media {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  overflow: hidden;
+  border-radius: 12px;
+  background:
+    radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.12), transparent 44%),
+    linear-gradient(160deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02)),
+    rgba(255, 255, 255, 0.03);
+  flex-shrink: 0;
+}
+
+.present-item img {
   display: block;
   width: 100%;
-  aspect-ratio: 4 / 3;
+  height: 100%;
   object-fit: cover;
+  object-position: center;
 }
 
-.present-card h2 {
-  padding: 18px 18px 20px;
+.present-item h2 {
+  margin: 0;
   color: var(--app-navy);
-  font-family: "Playfair Display", Georgia, serif;
-  font-size: 1.2rem;
-  line-height: 1.18;
+  font-family: inherit;
+  font-size: 0.96rem;
+  line-height: 1.14;
+  text-wrap: balance;
 }
 
-.present-card-text-only {
-  display: grid;
+.present-item-body {
+  min-width: 0;
+}
+
+.present-item-text-only {
+  grid-template-columns: 1fr;
+  min-height: 64px;
+  padding-left: 14px;
+  padding-right: 14px;
+}
+
+.present-item-text-only .present-item-body {
+  display: flex;
   align-items: center;
-  min-height: 140px;
-}
-
-.present-card-text-only h2 {
-  padding: 22px 18px;
 }
 
 .back-to-invite {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 48px;
-  margin-top: 22px;
-  padding: 0 18px;
-  border: 1px solid rgba(255, 255, 255, 0.24);
-  border-radius: 8px;
-  background: linear-gradient(135deg, #f7f7f7, #aeb5bc 54%, #ffffff);
+  min-height: 34px;
+  margin-top: 12px;
+  padding: 0 13px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.16), transparent 42%),
+    linear-gradient(135deg, #f7f7f7, #b5bcc4 54%, #ffffff);
   color: #050505;
+  font-size: 0.74rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
   text-decoration: none;
   text-transform: uppercase;
-  box-shadow: 0 12px 28px rgba(255, 255, 255, 0.12);
-  transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
+  box-shadow:
+    0 8px 18px rgba(255, 255, 255, 0.08),
+    0 6px 18px rgba(0, 0, 0, 0.1);
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    background 180ms ease,
+    border-color 180ms ease;
 }
 
 .back-to-invite:hover {
   transform: translateY(-1px);
-  background: linear-gradient(135deg, #ffffff, #c5ccd4 54%, #ffffff);
-  box-shadow: 0 16px 34px rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.3);
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.2), transparent 42%),
+    linear-gradient(135deg, #ffffff, #cfd5dc 54%, #ffffff);
+  box-shadow:
+    0 10px 22px rgba(255, 255, 255, 0.12),
+    0 8px 22px rgba(0, 0, 0, 0.14);
+}
+
+@media (max-width: 767px) {
+  .presents-shell {
+    width: min(100% - 14px, 390px);
+    padding: 16px 0 22px;
+  }
+
+  .presents-header {
+    margin-bottom: 10px;
+  }
+
+  .presents-header h1 {
+    font-size: clamp(1.25rem, 6.5vw, 1.7rem);
+  }
+
+  .presents-list {
+    gap: 7px;
+  }
+
+  .present-item {
+    grid-template-columns: 48px minmax(0, 1fr);
+    gap: 10px;
+    min-height: 58px;
+    padding: 9px 10px;
+    border-radius: 12px;
+  }
+
+  .present-item-media {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+  }
+
+  .present-item-text-only {
+    grid-template-columns: 1fr;
+    min-height: 58px;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .back-to-invite {
+    width: 100%;
+    min-height: 36px;
+  }
 }
 
 @media (min-width: 1024px) {
   .confirmed-page {
-    height: 100dvh;
-    overflow: hidden;
+    height: auto;
+    overflow-y: auto;
   }
 
 }
