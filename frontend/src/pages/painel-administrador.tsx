@@ -1250,12 +1250,10 @@ function SecaoListaConvidados() {
 
         <div className="present-admin-list">
           {convidadosFiltrados.map((convidado) => (
-            <article key={convidado.id}>
-              <div className="admin-present-thumb">
-                <span className="image-icon admin-present-placeholder" aria-hidden="true">
-                  <img src="/icone-estrela.png" alt="" />
-                </span>
-              </div>
+            <article
+              key={convidado.id}
+              className="present-admin-item present-admin-item-convidado"
+            >
               <div className="admin-present-info">
                 <h4>{convidado.nome}</h4>
                 <p>{formatarIdentificacaoExibicao(convidado.identificacao)}</p>
