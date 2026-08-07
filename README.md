@@ -1,76 +1,56 @@
-# Convite de Aniversario
+# Convite de Aniversário
 
-Projeto de convite online com confirmacao de presenca, lista publica de
-presentes e area administrativa protegida.
+Aplicação web para convite com confirmação de presença e painel administrativo.
 
-## Tecnologias
+## Rotas
 
-- Frontend: React, TypeScript e Vite
-- Backend: Node.js, Express, Prisma e PostgreSQL
+- `/` - confirmação de presença
+- `/login` - login administrativo
+- `/admin` - painel administrativo
 
-## Como Rodar
-
-### Backend
+## Instalação
 
 ```bash
 cd backend
 npm install
 copy .env.example .env
 npm run prisma:migrate
-npm run dev
-```
 
-Preencha `backend/.env` com os valores reais apenas no seu ambiente local ou no
-provedor de deploy.
-
-### Frontend
-
-```bash
-cd frontend
+cd ..\frontend
 npm install
 copy .env.example .env
-npm run dev
 ```
 
-Preencha `frontend/.env` com a URL da API quando ela nao estiver no mesmo dominio.
+Configure as variáveis de ambiente antes de subir em produção.
 
-## Paginas
-
-- `/` - convite e confirmacao de presenca
-- `/presencaconfirmada` - presenca confirmada
-- `/presencanaoconfirmada` - presenca nao confirmada
-- `/presentes` - lista publica de presentes
-- `/login` - login administrativo
-- `/cadastropresente` - cadastro administrativo de presentes
-- `/relatorio` - relatorio administrativo de confirmacoes
-
-## Segurança
-
-- Nao commite arquivos `.env`.
-- Senhas de administradores devem ser armazenadas somente com hash bcrypt.
-- Rotas administrativas sao protegidas no backend por sessao httpOnly e CSRF.
-- Configure `FRONTEND_URL` apenas com os dominios autorizados.
-- Configure `ADMIN_SESSION_SECRET` com pelo menos 32 caracteres aleatorios.
-- Configure os limites `LOGIN_RATE_LIMIT_*`, `PUBLIC_RATE_LIMIT_*` e
-  `ADMIN_RATE_LIMIT_*` conforme o trafego esperado.
-- URLs de fotos de presentes devem usar HTTPS.
-- Aplique as migrations antes do deploy para manter constraints e indices do banco.
-
-## Scripts Uteis
-
-Frontend:
-
-```bash
-npm run dev
-npm run build
-npm run lint
-```
+## Execução
 
 Backend:
 
 ```bash
+cd backend
 npm run dev
-npm run build
-npm run prisma:migrate
-npm run prisma:studio
 ```
+
+Frontend:
+
+```bash
+cd frontend
+npm run dev
+```
+
+## Build
+
+```bash
+cd backend
+npm run build
+
+cd ..\frontend
+npm run build
+```
+
+## Observações
+
+- O frontend usa `VITE_API_URL` apenas quando a API não está no mesmo domínio.
+- O backend exige `DATABASE_URL`, `ADMIN_SESSION_SECRET` e `FRONTEND_URL` configurados.
+- As confirmações e o painel dependem das migrations do Prisma aplicadas no banco.

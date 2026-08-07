@@ -1,4 +1,5 @@
-const ENDERECO_API = (import.meta.env.VITE_API_URL ?? "/api").replace(/\/$/, "");
+const ENDERECO_API_CONFIGURADO = import.meta.env.VITE_API_URL?.trim();
+const ENDERECO_API = (ENDERECO_API_CONFIGURADO || "/api").replace(/\/$/, "");
 
 type ErroDaApi = {
   mensagem?: string;
@@ -17,15 +18,35 @@ export async function pedirApi<T>(
   caminho: string,
   opcoes?: RequestInit,
 ): Promise<T> {
-  const resposta = await fetch(`${ENDERECO_API}${caminho}`, {
-    credentials: "include",
-    ...opcoes,
-  });
-  const dados = (await resposta.json().catch(() => ({}))) as T & ErroDaApi;
+  let resposta: Response;
+
+  try {
+    resposta = await fetch(`${ENDERECO_API}${caminho}`, {
+      credentials: "include",
+      ...opcoes,
+    });
+  } catch {
+    throw new ErroApi(
+      "Não foi possível comunicar com a API. Verifique se o backend está em execução.",
+      0,
+    );
+  }
+
+  const conteudo = await resposta.text();
+  let dados = {} as T & ErroDaApi;
+
+  if (conteudo.trim()) {
+    try {
+      dados = JSON.parse(conteudo) as T & ErroDaApi;
+    } catch {
+      dados = {} as T & ErroDaApi;
+    }
+  }
 
   if (!resposta.ok) {
     throw new ErroApi(
-      dados.mensagem ?? "Não foi possível comunicar com a API.",
+      dados.mensagem ??
+        `Não foi possível comunicar com a API. (status ${resposta.status})`,
       resposta.status,
     );
   }

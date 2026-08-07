@@ -11,7 +11,7 @@ function destinoAposLogin() {
     return redirect;
   }
 
-  return "/relatorio";
+  return "/admin";
 }
 
 function LoginAdmin() {
@@ -38,7 +38,20 @@ function LoginAdmin() {
   return (
     <main className="admin-login-page">
       <section className="admin-login-card" aria-labelledby="admin-login-title">
-        <h1 id="admin-login-title">Login administrativo</h1>
+        <div className="admin-login-card-header">
+          <a
+            className="admin-login-back-link"
+            href="/"
+            aria-label="Voltar para o convite"
+            title="Voltar para o convite"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M14.7 5.3a1 1 0 0 1 0 1.4L10.41 11H20a1 1 0 1 1 0 2h-9.59l4.3 4.3a1 1 0 0 1-1.42 1.4l-6-6a1 1 0 0 1 0-1.4l6-6a1 1 0 0 1 1.41 0Z" />
+            </svg>
+            <span className="sr-only">Voltar para o convite</span>
+          </a>
+          <h1 id="admin-login-title">Login administrativo</h1>
+        </div>
 
         <form onSubmit={enviarLogin}>
           <label htmlFor="admin-usuario">Usuário ou e-mail</label>

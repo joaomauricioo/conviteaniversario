@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { pedirApi } from "../lib/api";
 import {
   celularValido,
@@ -6,14 +6,16 @@ import {
   limparDigitosCelular,
   salvarPresenca,
   type PresencaSalva,
+  type RespostaPresenca,
 } from "../lib/presenca";
 
 const ENDERECO_MAPA =
   "https://www.google.com/maps/search/?api=1&query=Cerimonial+Porto+Bello,+R.+Nelcy+Lopes+Vieira,+140,+Jardim+Limoeiro,+Serra+-+ES,+29164-018";
 
 type PropriedadesFormulario = {
-  onConfirmacaoChange?: (confirmado: boolean) => void;
+  onConfirmacaoChange?: (confirmado: RespostaPresenca) => void;
   presencaInicial?: PresencaSalva | null;
+  permitirEdicaoLivre?: boolean;
 };
 
 type RespostaConfirmacao = {
@@ -82,8 +84,14 @@ export function AcoesConfirmacao({ className = "" }: PropriedadesAcoes) {
   );
 }
 
-function Formulario({ onConfirmacaoChange, presencaInicial }: PropriedadesFormulario) {
-  const camposIdentificacaoSomenteLeitura = Boolean(presencaInicial);
+function Formulario({
+  onConfirmacaoChange,
+  presencaInicial,
+  permitirEdicaoLivre = false,
+}: PropriedadesFormulario) {
+  const camposIdentificacaoSomenteLeitura =
+    Boolean(presencaInicial) && !permitirEdicaoLivre;
+  const celularRef = useRef<HTMLInputElement | null>(null);
   const [nome, setNome] = useState(presencaInicial?.nome ?? "");
   const [celular, setCelular] = useState(
     presencaInicial ? formatarCelular(presencaInicial.celular) : "",
@@ -91,11 +99,12 @@ function Formulario({ onConfirmacaoChange, presencaInicial }: PropriedadesFormul
   const [presenca, setPresenca] = useState(presencaInicial?.respostaPresenca ?? "");
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState("");
+  const [mostrarConfirmacaoNumero, setMostrarConfirmacaoNumero] = useState(false);
+  const [permitirEdicaoIdentificacao, setPermitirEdicaoIdentificacao] = useState(
+    !camposIdentificacaoSomenteLeitura,
+  );
 
-  async function handleSubmit(event: React.FormEvent) {
-    event.preventDefault();
-    setErro("");
-
+  async function enviarConfirmacao(ignorarConfirmacaoNumero = false) {
     if (!nome.trim() || !celular.trim() || !presenca) {
       setErro("Preencha o nome, o celular e informe sua presença.");
       return;
@@ -106,13 +115,20 @@ function Formulario({ onConfirmacaoChange, presencaInicial }: PropriedadesFormul
       return;
     }
 
+    const nomeLimpo = nome.trim();
+    const celularLimpo = limparDigitosCelular(celular);
+    const presencaConfirmada = presenca === "sim";
+
+    if (presencaConfirmada && !ignorarConfirmacaoNumero) {
+      setMostrarConfirmacaoNumero(true);
+      return;
+    }
+
     setCarregando(true);
+    setErro("");
+    setMostrarConfirmacaoNumero(false);
 
     try {
-      const nomeLimpo = nome.trim();
-      const celularLimpo = limparDigitosCelular(celular);
-      const presencaConfirmada = presenca === "sim";
-
       const resposta = await pedirApi<RespostaConfirmacao>("/confirmar-presenca", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -129,9 +145,7 @@ function Formulario({ onConfirmacaoChange, presencaInicial }: PropriedadesFormul
         respostaPresenca: presencaConfirmada ? "sim" : "nao",
         mensagem: resposta.mensagem,
       });
-      onConfirmacaoChange?.(true);
-      window.location.href =
-        presencaConfirmada ? "/presencaconfirmada" : "/presencanaoconfirmada";
+      onConfirmacaoChange?.(presencaConfirmada ? "sim" : "nao");
     } catch (error) {
       setErro(
         error instanceof Error
@@ -140,7 +154,16 @@ function Formulario({ onConfirmacaoChange, presencaInicial }: PropriedadesFormul
       );
     } finally {
       setCarregando(false);
+      if (!presencaConfirmada) {
+        setMostrarConfirmacaoNumero(false);
+      }
     }
+  }
+
+  async function handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
+    setErro("");
+    await enviarConfirmacao();
   }
 
   return (
@@ -156,8 +179,12 @@ function Formulario({ onConfirmacaoChange, presencaInicial }: PropriedadesFormul
           type="text"
           placeholder="Digite seu nome"
           value={nome}
-          onChange={(event) => setNome(event.target.value)}
-          readOnly={camposIdentificacaoSomenteLeitura}
+          onChange={(event) => {
+            setNome(event.target.value);
+            setMostrarConfirmacaoNumero(false);
+            setPermitirEdicaoIdentificacao(true);
+          }}
+          readOnly={camposIdentificacaoSomenteLeitura && !permitirEdicaoIdentificacao}
           maxLength={100}
           required
         />
@@ -169,8 +196,13 @@ function Formulario({ onConfirmacaoChange, presencaInicial }: PropriedadesFormul
           inputMode="tel"
           placeholder="(27) 99999-9999"
           value={celular}
-          onChange={(event) => setCelular(formatarCelular(event.target.value))}
-          readOnly={camposIdentificacaoSomenteLeitura}
+          ref={celularRef}
+          onChange={(event) => {
+            setCelular(formatarCelular(event.target.value));
+            setMostrarConfirmacaoNumero(false);
+            setPermitirEdicaoIdentificacao(true);
+          }}
+          readOnly={camposIdentificacaoSomenteLeitura && !permitirEdicaoIdentificacao}
           maxLength={15}
           required
         />
@@ -183,7 +215,10 @@ function Formulario({ onConfirmacaoChange, presencaInicial }: PropriedadesFormul
               name="presenca"
               value="sim"
               checked={presenca === "sim"}
-              onChange={() => setPresenca("sim")}
+              onChange={() => {
+                setPresenca("sim");
+                setMostrarConfirmacaoNumero(false);
+              }}
               required
             />
             <span>Sim</span>
@@ -195,17 +230,66 @@ function Formulario({ onConfirmacaoChange, presencaInicial }: PropriedadesFormul
               name="presenca"
               value="nao"
               checked={presenca === "nao"}
-              onChange={() => setPresenca("nao")}
+              onChange={() => {
+                setPresenca("nao");
+                setMostrarConfirmacaoNumero(false);
+              }}
             />
             <span>Não</span>
           </label>
         </div>
 
-        {erro && <p className="form-error" role="alert">{erro}</p>}
+        {erro && (
+          <p className="form-error" role="alert">
+            {erro}
+          </p>
+        )}
 
         <button type="submit" disabled={carregando}>
           {carregando ? "Enviando..." : "Enviar"}
         </button>
+
+        {mostrarConfirmacaoNumero && (
+          <div
+            className="presence-check-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="presence-check-title"
+          >
+            <div className="presence-check-panel">
+              <h3 id="presence-check-title">Confira o número informado</h3>
+              <p>
+                Antes de validarmos sua presença, confira se o número ou a
+                identificação está correto. Se estiver, vamos verificar na lista de
+                convidados.
+              </p>
+              <div className="presence-check-actions">
+                <button
+                  type="button"
+                  className="presence-check-secondary"
+                  onClick={() => {
+                    setMostrarConfirmacaoNumero(false);
+                    setPermitirEdicaoIdentificacao(true);
+                    window.requestAnimationFrame(() => {
+                      celularRef.current?.focus();
+                      celularRef.current?.select();
+                    });
+                  }}
+                  disabled={carregando}
+                >
+                  Corrigir número
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void enviarConfirmacao(true)}
+                  disabled={carregando}
+                >
+                  Número correto
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </form>
     </div>
   );

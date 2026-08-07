@@ -18,7 +18,7 @@ function PresencaNaoConfirmada() {
           <h1>Que pena, {presencaSalva.nome}.</h1>
           <p>Sentirei sua falta nesse dia tão especial.</p>
           <div className="presence-update-action">
-            <a className="presence-update-button" href="/confirmar-presenca">
+            <a className="presence-update-button" href="/?editar=1">
               Atualizar presença
             </a>
           </div>

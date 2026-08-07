@@ -37,7 +37,7 @@ function PresencaConfirmada() {
         </section>
 
         <div className="presence-update-action">
-          <a className="presence-update-button" href="/confirmar-presenca">
+          <a className="presence-update-button" href="/?editar=1">
             Atualizar presença
           </a>
         </div>

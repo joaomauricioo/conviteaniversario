@@ -11,10 +11,30 @@ type RespostaSessaoAdmin = {
   csrfToken: string;
 };
 
-let csrfTokenAdmin: string | null = null;
+const CHAVE_CSRF_ADMIN = "convite-csrf-token-admin";
+
+function lerTokenCsrfArmazenado() {
+  if (typeof window === "undefined") return null;
+
+  return window.sessionStorage.getItem(CHAVE_CSRF_ADMIN);
+}
+
+function salvarTokenCsrfArmazenado(token: string | null) {
+  if (typeof window === "undefined") return;
+
+  if (token) {
+    window.sessionStorage.setItem(CHAVE_CSRF_ADMIN, token);
+    return;
+  }
+
+  window.sessionStorage.removeItem(CHAVE_CSRF_ADMIN);
+}
+
+let csrfTokenAdmin: string | null = lerTokenCsrfArmazenado();
 
 function salvarTokenCsrf(resposta: RespostaSessaoAdmin) {
   csrfTokenAdmin = resposta.csrfToken;
+  salvarTokenCsrfArmazenado(resposta.csrfToken);
   return resposta;
 }
 
@@ -47,9 +67,14 @@ export async function sairAdmin() {
     headers: csrfTokenAdmin ? { "X-CSRF-Token": csrfTokenAdmin } : undefined,
   });
   csrfTokenAdmin = null;
+  salvarTokenCsrfArmazenado(null);
 }
 
 export async function pedirApiAdmin<T>(caminho: string, opcoes?: RequestInit) {
+  if (!csrfTokenAdmin) {
+    csrfTokenAdmin = lerTokenCsrfArmazenado();
+  }
+
   if (!csrfTokenAdmin) {
     await obterSessaoAdmin();
   }

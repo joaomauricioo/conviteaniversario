@@ -49,9 +49,7 @@ function Presentes() {
           <h1>Lista de presentes</h1>
         </header>
 
-        {carregando && (
-          <div className="presents-feedback">Carregando sugestões...</div>
-        )}
+        {carregando && <div className="presents-feedback">Carregando sugestões...</div>}
         {erro && (
           <div className="presents-feedback is-error" role="alert">
             {erro}

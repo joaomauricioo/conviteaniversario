@@ -2,13 +2,10 @@ import "./App.css";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { obterSessaoAdmin, redirecionarParaLogin } from "./lib/admin";
-import CadastroPresente from "./pages/cadastropresente";
 import Inicio from "./pages/home";
 import LoginAdmin from "./pages/login";
+import PainelAdministrativo from "./pages/painel-administrador";
 import Presentes from "./pages/presentes";
-import PresencaConfirmada from "./pages/presencaconfirmada";
-import PresencaNaoConfirmada from "./pages/presencanaoconfirmada";
-import Relatorio from "./pages/relatorio";
 
 function RotaAdministrativa({ children }: { children: ReactNode }) {
   const [autenticado, setAutenticado] = useState(false);
@@ -32,32 +29,42 @@ function RotaAdministrativa({ children }: { children: ReactNode }) {
   );
 }
 
+function normalizarRota(caminho: string) {
+  switch (caminho) {
+    case "/confirmar-presenca":
+    case "/presencaconfirmada":
+    case "/presencanaoconfirmada":
+      return "/";
+    case "/painel-administrador":
+    case "/painel-administrador/cadastropresente":
+    case "/painel-administrador/relatorio":
+    case "/painel-administrador/convidados":
+    case "/cadastropresente":
+    case "/relatorio":
+    case "/lista-convidados":
+      return "/admin";
+    default:
+      return caminho;
+  }
+}
+
 function App() {
-  const caminho = window.location.pathname.replace(/\/+$/, "") || "/";
+  const caminhoOriginal = window.location.pathname.replace(/\/+$/, "") || "/";
+  const caminho = normalizarRota(caminhoOriginal);
+
+  if (caminho !== caminhoOriginal) {
+    window.history.replaceState(null, "", caminho);
+  }
 
   if (caminho === "/login") return <LoginAdmin />;
-  if (caminho === "/relatorio") {
-    return (
-      <RotaAdministrativa>
-        <Relatorio />
-      </RotaAdministrativa>
-    );
-  }
-  if (caminho === "/cadastropresente") {
-    return (
-      <RotaAdministrativa>
-        <CadastroPresente />
-      </RotaAdministrativa>
-    );
-  }
   if (caminho === "/presentes") return <Presentes />;
-  if (caminho === "/confirmar-presenca") return <Inicio permitirAtualizacao />;
-  if (caminho === "/prensencaconfirmada") {
-    window.history.replaceState(null, "", "/presencaconfirmada");
-    return <PresencaConfirmada />;
+  if (caminho === "/admin") {
+    return (
+      <RotaAdministrativa>
+        <PainelAdministrativo />
+      </RotaAdministrativa>
+    );
   }
-  if (caminho === "/presencaconfirmada") return <PresencaConfirmada />;
-  if (caminho === "/presencanaoconfirmada") return <PresencaNaoConfirmada />;
 
   return <Inicio />;
 }
