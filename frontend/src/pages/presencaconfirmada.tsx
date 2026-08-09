@@ -23,14 +23,6 @@ function PresencaConfirmada() {
           </p>
         </section>
 
-        <section className="invite-hero confirmed-hero">
-          <img
-            className="invite-crest"
-            src="/brasao-isabela-prata.png"
-            alt="Brasão com a inicial de Isabela"
-          />
-        </section>
-
         <section className="confirmed-bottom-row" aria-label="Informações do evento">
           <CartaoCodigoVestimenta className="dress-code-card-hero" />
           <AcoesConfirmacao className="confirmation-actions-cards" />

@@ -47,7 +47,7 @@ export function CartaoCodigoVestimenta({ className = "" }: PropriedadesCartao) {
     >
       <img
         className="dress-code-image"
-        src="/dress-code-isabela.png"
+        src="/dress-code-isabela.jpeg"
         alt="Dress code para os XV anos de Isabela: homens e mulheres em traje formal. Azul-marinho e preto estao reservados para a debutante."
       />
     </section>
@@ -61,13 +61,13 @@ type PropriedadesAcoes = {
 export function AcoesConfirmacao({ className = "" }: PropriedadesAcoes) {
   return (
     <div className={`confirmation-actions ${className}`.trim()}>
-      <a className="gift-link" href="/presentes">
-        <span className="action-ornament" aria-hidden="true" />
-        <IconeImagem src="/icone-presente.png" />
-        <strong>Sugestão de presentes</strong>
-        <span className="action-divider" aria-hidden="true" />
-        <small>Clique para ver nossas sugestões</small>
-      </a>
+      <div className="dress-code-card">
+        <img
+          className="dress-code-image"
+          src="/sugestoes-presentes.jpeg"
+          alt="Sugestões de presentes"
+        />
+      </div>
       <a
         className="gift-link"
         href={ENDERECO_MAPA}
@@ -87,9 +87,11 @@ export function AcoesConfirmacao({ className = "" }: PropriedadesAcoes) {
 function Formulario({
   onConfirmacaoChange,
   presencaInicial,
+  permitirEdicaoLivre = false,
 }: PropriedadesFormulario) {
   const celularRef = useRef<HTMLInputElement | null>(null);
   const celularConfirmacaoRef = useRef<HTMLInputElement | null>(null);
+  const bloquearDadosPessoais = Boolean(presencaInicial && permitirEdicaoLivre);
   const [nome, setNome] = useState(presencaInicial?.nome ?? "");
   const [celular, setCelular] = useState(
     presencaInicial ? formatarCelular(presencaInicial.celular) : "",
@@ -183,7 +185,10 @@ function Formulario({
           type="text"
           placeholder="Digite seu nome"
           value={nome}
+          readOnly={bloquearDadosPessoais}
+          aria-readonly={bloquearDadosPessoais}
           onChange={(event) => {
+            if (bloquearDadosPessoais) return;
             setNome(event.target.value);
             setMostrarConfirmacaoNumero(false);
           }}
@@ -199,7 +204,10 @@ function Formulario({
           placeholder="(27) 99999-9999"
           value={celular}
           ref={celularRef}
+          readOnly={bloquearDadosPessoais}
+          aria-readonly={bloquearDadosPessoais}
           onChange={(event) => {
+            if (bloquearDadosPessoais) return;
             setCelular(formatarCelular(event.target.value));
             setMostrarConfirmacaoNumero(false);
           }}
@@ -266,7 +274,10 @@ function Formulario({
                   type="tel"
                   inputMode="tel"
                   value={celular}
+                  readOnly={bloquearDadosPessoais}
+                  aria-readonly={bloquearDadosPessoais}
                   onChange={(event) => {
+                    if (bloquearDadosPessoais) return;
                     setCelular(formatarCelular(event.target.value));
                   }}
                   maxLength={15}

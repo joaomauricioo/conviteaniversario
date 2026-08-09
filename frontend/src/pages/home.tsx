@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Formulario from "../components/form";
 import { carregarPresencaSalva, type RespostaPresenca } from "../lib/presenca";
 import PresencaConfirmada from "./presencaconfirmada";
@@ -18,6 +18,16 @@ function Inicio({ permitirAtualizacao = false }: PropriedadesInicio) {
 
   const respostaAtiva =
     resultadoConfirmacao ?? (!editarViaQuery ? presencaSalva?.respostaPresenca ?? null : null);
+
+  useEffect(() => {
+    if (respostaAtiva === "sim" && window.location.pathname !== "/presencaconfirmada") {
+      window.history.replaceState(null, "", "/presencaconfirmada");
+    }
+
+    if (respostaAtiva === "nao" && window.location.pathname !== "/presencanaoconfirmada") {
+      window.history.replaceState(null, "", "/presencanaoconfirmada");
+    }
+  }, [respostaAtiva]);
 
   if (respostaAtiva === "sim") {
     return <PresencaConfirmada />;

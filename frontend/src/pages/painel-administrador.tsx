@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { baixarArquivoApi } from "../lib/api";
 import { pedirApiAdmin, sairAdmin } from "../lib/admin";
 import { formatarCelular } from "../lib/presenca";
 
@@ -46,6 +47,15 @@ type ConvidadoLista = {
 
 type RespostaListaConvidados = {
   convidados: ConvidadoLista[];
+};
+
+type RespostaImportacaoListaConvidados = {
+  mensagem: string;
+  importados: number;
+  novos: number;
+  atualizados: number;
+  ignorados: number;
+  duplicadosNaPlanilha: number;
 };
 
 type PropriedadesSecao = {
@@ -1012,6 +1022,9 @@ function SecaoListaConvidados() {
   const [erro, setErro] = useState("");
   const [sucesso, setSucesso] = useState("");
   const [busca, setBusca] = useState("");
+  const [arquivoImportacao, setArquivoImportacao] = useState<File | null>(null);
+  const [importando, setImportando] = useState(false);
+  const arquivoImportacaoRef = useRef<HTMLInputElement | null>(null);
 
   async function buscarConvidados() {
     const resposta = await pedirApiAdmin<RespostaListaConvidados>(
@@ -1094,6 +1107,65 @@ function SecaoListaConvidados() {
       );
     } finally {
       setSalvando(false);
+    }
+  }
+
+  async function baixarModeloImportacao() {
+    await baixarArquivoApi(
+      "/admin/lista-convidados/modelo-importacao",
+      "modelo-importacao-convidados.xlsx",
+    );
+  }
+
+  function selecionarArquivoImportacao(evento: React.ChangeEvent<HTMLInputElement>) {
+    const arquivo = evento.target.files?.[0] ?? null;
+    setArquivoImportacao(arquivo);
+    setErro("");
+    setSucesso("");
+  }
+
+  function limparArquivoImportacao() {
+    setArquivoImportacao(null);
+    if (arquivoImportacaoRef.current) {
+      arquivoImportacaoRef.current.value = "";
+    }
+  }
+
+  async function importarConvidadosExcel() {
+    if (!arquivoImportacao) {
+      setErro("Escolha a planilha Excel para importar.");
+      return;
+    }
+
+    setImportando(true);
+    setErro("");
+    setSucesso("");
+
+    try {
+      const resposta = await pedirApiAdmin<RespostaImportacaoListaConvidados>(
+        "/admin/lista-convidados/importar",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type":
+              arquivoImportacao.type ||
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          },
+          body: arquivoImportacao,
+        },
+      );
+
+      setSucesso(resposta.mensagem);
+      limparArquivoImportacao();
+      await atualizarListaConvidados();
+    } catch (erroAtual) {
+      setErro(
+        erroAtual instanceof Error
+          ? erroAtual.message
+          : "Não foi possível importar a planilha.",
+      );
+    } finally {
+      setImportando(false);
     }
   }
 
@@ -1218,6 +1290,52 @@ function SecaoListaConvidados() {
             )}
           </div>
         </form>
+
+        <div className="convidados-importacao">
+          <div className="present-admin-card-heading">
+            <span className="image-icon admin-heading-icon" aria-hidden="true">
+              <img src="/icone-estrela.png" alt="" />
+            </span>
+            <div>
+              <h3>Importar por Excel</h3>
+              <p>Baixe o modelo, preencha Nome e Numero e envie a planilha.</p>
+            </div>
+          </div>
+
+          <div className="present-form-actions">
+            <button
+              type="button"
+              className="button-secondary"
+              onClick={() => void baixarModeloImportacao()}
+            >
+              Baixar modelo Excel
+            </button>
+          </div>
+
+          <label htmlFor="arquivo-importacao-convidados">Planilha Excel</label>
+          <input
+            ref={arquivoImportacaoRef}
+            id="arquivo-importacao-convidados"
+            type="file"
+            accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+            onChange={selecionarArquivoImportacao}
+          />
+
+          {arquivoImportacao && (
+            <p className="admin-import-file-name">Arquivo selecionado: {arquivoImportacao.name}</p>
+          )}
+
+          <div className="present-form-actions">
+            <button type="button" disabled={importando || !arquivoImportacao} onClick={() => void importarConvidadosExcel()}>
+              {importando ? "Importando..." : "Importar convidados"}
+            </button>
+            {arquivoImportacao && (
+              <button type="button" className="button-secondary" onClick={limparArquivoImportacao}>
+                Limpar arquivo
+              </button>
+            )}
+          </div>
+        </div>
       </section>
 
       <section className="present-admin-list-card">

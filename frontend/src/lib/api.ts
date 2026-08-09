@@ -53,3 +53,50 @@ export async function pedirApi<T>(
 
   return dados;
 }
+
+export async function baixarArquivoApi(
+  caminho: string,
+  nomeArquivo: string,
+  opcoes?: RequestInit,
+) {
+  let resposta: Response;
+
+  try {
+    resposta = await fetch(`${ENDERECO_API}${caminho}`, {
+      credentials: "include",
+      ...opcoes,
+    });
+  } catch {
+    throw new ErroApi(
+      "Não foi possível comunicar com a API. Verifique se o backend está em execução.",
+      0,
+    );
+  }
+
+  if (!resposta.ok) {
+    const conteudo = await resposta.text();
+    let mensagem = `Não foi possível comunicar com a API. (status ${resposta.status})`;
+
+    if (conteudo.trim()) {
+      try {
+        const dados = JSON.parse(conteudo) as ErroDaApi;
+        mensagem = dados.mensagem ?? mensagem;
+      } catch {
+        mensagem = conteudo.trim() || mensagem;
+      }
+    }
+
+    throw new ErroApi(mensagem, resposta.status);
+  }
+
+  const arquivo = await resposta.blob();
+  const url = URL.createObjectURL(arquivo);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = nomeArquivo;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}

@@ -16,6 +16,10 @@ import {
   limitarRotasAdministrativas,
   limitarRotasPublicas,
 } from "./lib/rate-limit";
+import {
+  gerarModeloImportacaoListaConvidados,
+  lerImportacaoListaConvidados,
+} from "./lib/lista-convidados-importacao";
 import { Prisma } from "./generated/prisma/client";
 
 function limparTexto(texto: string) {
@@ -202,6 +206,15 @@ const exigirJson: RequestHandler = (pedido, resposta, proximo) => {
 
   proximo();
 };
+
+const receberArquivoImportacaoListaConvidados = express.raw({
+  type: [
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "application/vnd.ms-excel",
+    "application/octet-stream",
+  ],
+  limit: "5mb",
+});
 
 function erroDeValidacao(resultado: z.ZodError) {
   return {
@@ -737,6 +750,92 @@ const excluirConvidadoLista: RequestHandler = async (pedido, resposta, proximo) 
   }
 };
 
+const baixarModeloImportacaoListaConvidados: RequestHandler = async (
+  _pedido,
+  resposta,
+  proximo,
+) => {
+  try {
+    const arquivo = gerarModeloImportacaoListaConvidados();
+
+    resposta.setHeader(
+      "Content-Disposition",
+      'attachment; filename="modelo-importacao-convidados.xlsx"',
+    );
+    resposta.type("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    resposta.send(arquivo);
+  } catch (erro) {
+    proximo(erro);
+  }
+};
+
+const importarListaConvidadosArquivo: RequestHandler = async (
+  pedido,
+  resposta,
+  proximo,
+) => {
+  try {
+    if (!Buffer.isBuffer(pedido.body) || pedido.body.length === 0) {
+      resposta.status(400).json({ mensagem: "Envie uma planilha Excel válida." });
+      return;
+    }
+
+    let importacao;
+
+    try {
+      importacao = lerImportacaoListaConvidados(pedido.body);
+    } catch (erro) {
+      resposta.status(400).json({
+        mensagem:
+          erro instanceof Error ? erro.message : "Não foi possível ler a planilha.",
+      });
+      return;
+    }
+
+    let novos = 0;
+    let atualizados = 0;
+
+    await prisma.$transaction(async (transacao) => {
+      for (const convidado of importacao.convidados) {
+        const existente = await transacao.listaConvidado.findUnique({
+          where: { identificacao: convidado.identificacao },
+          select: { id: true, nome: true },
+        });
+
+        if (!existente) {
+          await transacao.listaConvidado.create({
+            data: {
+              nome: convidado.nome,
+              identificacao: convidado.identificacao,
+            },
+          });
+          novos += 1;
+          continue;
+        }
+
+        if (existente.nome !== convidado.nome) {
+          await transacao.listaConvidado.update({
+            where: { identificacao: convidado.identificacao },
+            data: { nome: convidado.nome },
+          });
+          atualizados += 1;
+        }
+      }
+    });
+
+    resposta.json({
+      mensagem: `Importação concluída: ${novos} novo(s), ${atualizados} atualizado(s) e ${importacao.linhasIgnoradas} linha(s) ignorada(s).`,
+      importados: novos + atualizados,
+      novos,
+      atualizados,
+      ignorados: importacao.linhasIgnoradas,
+      duplicadosNaPlanilha: importacao.linhasDuplicadas,
+    });
+  } catch (erro) {
+    proximo(erro);
+  }
+};
+
 export const app = express();
 
 app.set("trust proxy", 1);
@@ -796,15 +895,15 @@ app.post("/confirmar-presenca", limitarRotasPublicas, exigirJson, async (pedido,
       },
     });
 
-    if (dados.presenca) {
-      if (convidadoExistente?.presenca) {
-        resposta.status(409).json({
-          mensagem:
-            "Este número já confirmou presença. Se precisar alterar seus dados, entre em contato com os organizadores do evento.",
-        });
-        return;
-      }
+    if (convidadoExistente?.presenca && dados.presenca) {
+      resposta.status(200).json({
+        mensagem: "Sua confirmação de presença foi atualizada com sucesso.",
+        atualizado: true,
+      });
+      return;
+    }
 
+    if (dados.presenca) {
       const convidadoAutorizado = await prisma.listaConvidado.findFirst({
         where: { identificacao: identificacaoConfirmacao },
         select: { id: true },
@@ -896,6 +995,20 @@ app.delete(
 );
 
 app.get("/admin/lista-convidados", limitarRotasAdministrativas, exigirAdminAutenticado, listarConvidadosAdministrativos);
+app.get(
+  "/admin/lista-convidados/modelo-importacao",
+  limitarRotasAdministrativas,
+  exigirAdminAutenticado,
+  baixarModeloImportacaoListaConvidados,
+);
+app.post(
+  "/admin/lista-convidados/importar",
+  limitarRotasAdministrativas,
+  exigirAdminAutenticado,
+  exigirCsrfAdmin,
+  receberArquivoImportacaoListaConvidados,
+  importarListaConvidadosArquivo,
+);
 app.post("/lista-convidados", limitarRotasAdministrativas, exigirAdminAutenticado, exigirCsrfAdmin, exigirJson, salvarConvidadoLista);
 app.post("/admin/lista-convidados", limitarRotasAdministrativas, exigirAdminAutenticado, exigirCsrfAdmin, exigirJson, salvarConvidadoLista);
 app.put("/lista-convidados/:id", limitarRotasAdministrativas, exigirAdminAutenticado, exigirCsrfAdmin, exigirJson, atualizarConvidadoLista);

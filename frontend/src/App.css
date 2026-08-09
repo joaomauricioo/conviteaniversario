@@ -167,7 +167,7 @@ a {
 
 .invite-crest {
   display: block;
-  width: min(220px, 72vw);
+  width: min(300px, 72vw);
   aspect-ratio: 1;
   margin: clamp(18px, 3vh, 30px) auto 0;
   object-fit: contain;
@@ -183,15 +183,6 @@ a {
   font-size: clamp(1.02rem, 2vw, 1.28rem);
   font-weight: 600;
   line-height: 1.45;
-}
-
-.confirmed-hero {
-  margin-top: -6px;
-}
-
-.is-confirmed-layout .invite-crest {
-  width: clamp(165px, 16vw, 220px);
-  margin-top: clamp(16px, 2.8vh, 28px);
 }
 
 .form,
@@ -635,6 +626,19 @@ a {
     inset 0 0 0 5px rgba(255, 255, 255, 0.06),
     0 24px 52px rgba(0, 0, 0, 0.44),
     0 0 24px rgba(255, 255, 255, 0.12);
+}
+
+.gift-link-presentes {
+  padding: 0;
+  gap: 0;
+}
+
+.gift-link-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #f7f8fa;
 }
 
 .action-ornament {
@@ -1435,6 +1439,19 @@ a {
   padding: 22px;
 }
 
+.convidados-importacao {
+  display: grid;
+  gap: 14px;
+  padding: 0 22px 22px;
+  border-top: 1px solid var(--app-line);
+}
+
+.admin-import-file-name {
+  margin: 0;
+  color: var(--app-muted);
+  font-size: 0.92rem;
+}
+
 .present-admin-form-card label {
   color: var(--app-ink);
   font-weight: 700;
@@ -1642,8 +1659,8 @@ a {
   }
 
   .confirmed-bottom-row {
-    grid-template-columns: 1fr;
-    width: min(100%, 720px);
+    grid-template-columns: minmax(0, 1.3fr) repeat(2, minmax(0, 0.85fr));
+    width: min(100%, 960px);
   }
 
   .confirmation-actions-cards {
@@ -1677,10 +1694,6 @@ a {
 
   .success-card p {
     font-size: 0.98rem;
-  }
-
-  .is-confirmed-layout .invite-crest {
-    width: 142px;
   }
 
   .confirmed-bottom-row {
@@ -1778,27 +1791,13 @@ a {
   font-size: clamp(0.92rem, 1.5vw, 1.12rem);
 }
 
-.confirmed-page .confirmed-hero {
-  margin-top: 0;
-}
-
-.confirmed-page .confirmed-hero h1 {
-  font-size: clamp(1.22rem, 2vw, 1.6rem);
-}
-
-.confirmed-page .is-confirmed-layout .invite-crest {
-  width: clamp(118px, 13vh, 158px);
-  max-width: 220px;
-  margin-top: clamp(6px, 1vh, 12px);
-}
-
 .confirmed-page .confirmed-bottom-row {
   display: grid;
-  grid-template-columns: minmax(375px, 500px) repeat(2, minmax(170px, 190px));
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(170px, 190px);
   align-items: stretch;
   justify-content: center;
   gap: clamp(8px, 1vw, 12px);
-  width: min(100%, 780px);
+  width: min(100%, 1040px);
   margin-top: clamp(4px, 0.8vh, 8px);
   padding: 0;
 }
@@ -1812,12 +1811,28 @@ a {
   max-width: 500px;
 }
 
+.confirmed-page .dress-code-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
 .confirmed-page .gift-link {
   width: 100%;
   min-width: 0;
   min-height: clamp(60px, 26vh, 104px);
   gap: clamp(3px, 0.6vh, 6px);
   padding: clamp(12px, 1.5vh, 16px) clamp(10px, 1vw, 14px);
+}
+
+.confirmed-page .gift-link-presentes {
+  height: 100%;
+  padding: 0;
+  border-radius: 10px;
+}
+
+.confirmed-page .gift-link-image {
+  border-radius: 10px;
 }
 
 .confirmed-page .action-ornament {
@@ -2213,19 +2228,9 @@ a {
     font-size: clamp(2rem, 5.8vw, 3rem);
   }
 
-  .confirmed-page .is-confirmed-layout .invite-crest {
-    width: clamp(130px, 18vw, 170px);
-  }
-
   .confirmed-page .confirmed-bottom-row {
-    grid-template-columns: minmax(300px, 350px) minmax(220px, 1fr);
-    width: min(100%, 720px);
-  }
-
-  .confirmed-page .confirmation-actions-cards {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: clamp(10px, 1.5vh, 14px);
+    grid-template-columns: minmax(0, 1.3fr) repeat(2, minmax(0, 0.85fr));
+    width: min(100%, 960px);
   }
 
   .confirmed-page .gift-link {
@@ -2254,6 +2259,7 @@ a {
 }
 
 @media (max-width: 767px) {
+
   .report-header,
   .admin-panel-header {
     align-items: stretch;
@@ -2298,15 +2304,6 @@ a {
     font-size: 0.9rem;
   }
 
-  .confirmed-page .confirmed-hero h1 {
-    font-size: clamp(1.2rem, 6vw, 1.55rem);
-  }
-
-  .confirmed-page .is-confirmed-layout .invite-crest {
-    width: clamp(116px, 34vw, 146px);
-    margin-top: 8px;
-  }
-
   .confirmed-page .confirmed-bottom-row {
     grid-template-columns: 1fr;
     width: 100%;
@@ -2316,9 +2313,7 @@ a {
   }
 
   .confirmed-page .confirmation-actions-cards {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 10px;
+    display: contents;
   }
 
   .confirmed-page .dress-code-card {
@@ -2349,4 +2344,3 @@ a {
     font-size: 0.84rem;
   }
 }
-

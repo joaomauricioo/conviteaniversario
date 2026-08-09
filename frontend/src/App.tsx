@@ -5,6 +5,8 @@ import { obterSessaoAdmin, redirecionarParaLogin } from "./lib/admin";
 import Inicio from "./pages/home";
 import LoginAdmin from "./pages/login";
 import PainelAdministrativo from "./pages/painel-administrador";
+import PresencaConfirmada from "./pages/presencaconfirmada";
+import PresencaNaoConfirmada from "./pages/presencanaoconfirmada";
 import Presentes from "./pages/presentes";
 
 function RotaAdministrativa({ children }: { children: ReactNode }) {
@@ -32,8 +34,6 @@ function RotaAdministrativa({ children }: { children: ReactNode }) {
 function normalizarRota(caminho: string) {
   switch (caminho) {
     case "/confirmar-presenca":
-    case "/presencaconfirmada":
-    case "/presencanaoconfirmada":
       return "/";
     case "/painel-administrador":
     case "/painel-administrador/cadastropresente":
@@ -58,6 +58,8 @@ function App() {
 
   if (caminho === "/login") return <LoginAdmin />;
   if (caminho === "/presentes") return <Presentes />;
+  if (caminho === "/presencaconfirmada") return <PresencaConfirmada />;
+  if (caminho === "/presencanaoconfirmada") return <PresencaNaoConfirmada />;
   if (caminho === "/admin") {
     return (
       <RotaAdministrativa>
