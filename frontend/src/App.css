@@ -222,6 +222,28 @@ a {
   text-transform: uppercase;
 }
 
+.confirmation-note {
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 208, 102, 0.24);
+  border-radius: 10px;
+  background: rgba(255, 208, 102, 0.08);
+  color: #f4e1a5;
+  font-size: 0.88rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.form-submit-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.confirmation-note-bottom {
+  margin: 0;
+  text-align: center;
+}
+
 .form label,
 .form p {
   color: #e8ebee;

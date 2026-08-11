@@ -253,9 +253,15 @@ function Formulario({
           </p>
         )}
 
-        <button type="submit" disabled={carregando}>
-          {carregando ? "Enviando..." : "Enviar"}
-        </button>
+        <div className="form-submit-group">
+          <button type="submit" disabled={carregando}>
+            {carregando ? "Enviando..." : "Enviar"}
+          </button>
+
+          <p className="confirmation-note confirmation-note-bottom" role="note">
+            ⚠️ A confirmação é individual.
+          </p>
+        </div>
 
         {mostrarConfirmacaoNumero && (
           <div

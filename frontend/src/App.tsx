@@ -2,6 +2,7 @@ import "./App.css";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { obterSessaoAdmin, redirecionarParaLogin } from "./lib/admin";
+import { carregarPresencaSalva } from "./lib/presenca";
 import Inicio from "./pages/home";
 import LoginAdmin from "./pages/login";
 import PainelAdministrativo from "./pages/painel-administrador";
@@ -50,14 +51,30 @@ function normalizarRota(caminho: string) {
 
 function App() {
   const caminhoOriginal = window.location.pathname.replace(/\/+$/, "") || "/";
+  const buscaOriginal = window.location.search;
+  const editarViaQuery = new URLSearchParams(buscaOriginal).get("editar") === "1";
+  const presencaSalva = carregarPresencaSalva();
   const caminho = normalizarRota(caminhoOriginal);
+  const respostaSalva = presencaSalva?.respostaPresenca ?? null;
 
-  if (caminho !== caminhoOriginal) {
-    window.history.replaceState(null, "", caminho);
+  let caminhoFinal = caminho;
+
+  if (!editarViaQuery) {
+    if (caminho === "/" && respostaSalva === "sim") {
+      caminhoFinal = "/presencaconfirmada";
+    } else if (caminho === "/" && respostaSalva === "nao") {
+      caminhoFinal = "/presencanaoconfirmada";
+    }
+  }
+
+  if (caminhoFinal !== caminhoOriginal) {
+    window.history.replaceState(null, "", caminhoFinal);
   }
 
   if (caminho === "/login") return <LoginAdmin />;
   if (caminho === "/presentes") return <Presentes />;
+  if (caminhoFinal === "/presencaconfirmada") return <PresencaConfirmada />;
+  if (caminhoFinal === "/presencanaoconfirmada") return <PresencaNaoConfirmada />;
   if (caminho === "/presencaconfirmada") return <PresencaConfirmada />;
   if (caminho === "/presencanaoconfirmada") return <PresencaNaoConfirmada />;
   if (caminho === "/admin") {
